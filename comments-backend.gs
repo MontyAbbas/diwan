@@ -15,13 +15,22 @@
  *  1. Go to https://script.google.com → New project.
  *  2. Delete the placeholder code, paste this whole file, and change
  *     SECRET below to any random phrase of your own.
- *  3. Click Deploy → New deployment → type: Web app.
+ *  3. IMPORTANT — grant permissions first: in the toolbar, select
+ *     the function "authorize" and click Run, then Allow the
+ *     permissions dialog (Advanced → Go to project → Allow).
+ *  4. Click Deploy → New deployment → type: Web app.
  *       - Execute as: Me
  *       - Who has access: Anyone
- *     Click Deploy and authorize when asked.
- *  4. Copy the web app URL (ends in /exec) and paste it into
+ *  5. Copy the web app URL (ends in /exec) and paste it into
  *     COMMENTS_ENDPOINT in index.html.
  */
+
+/** Run this once from the editor to grant Sheets + Mail permissions. */
+function authorize() {
+  sheet_();
+  MailApp.getRemainingDailyQuota();
+  Logger.log("Authorized OK — sheet ready");
+}
 
 var ADMIN_EMAIL = "montasir.abbas@gmail.com";
 var SECRET = "CHANGE-THIS-to-your-own-random-secret";
