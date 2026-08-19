@@ -759,16 +759,6 @@
     }
     nav.collection { position: static; }
     .frame { transform: none; }
-    /* No fixed layers at all on touch devices — the sky lives on the
-       body itself. iOS Safari blanks page content when fixed layers
-       are re-composited on rotation. */
-    .stage-light, .stage-motes { display: none; }
-    body {
-      background:
-        radial-gradient(42rem 30rem at 78% 12%, var(--bg-glow-1), transparent 65%),
-        radial-gradient(38rem 34rem at 12% 85%, var(--bg-glow-2), transparent 65%),
-        var(--bg);
-    }
   }
 
   /* ============================================================
@@ -1951,10 +1941,6 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
    ============================================================== */
 (function stageMotes() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  /* Touch devices (iPhone/iPad): the canvas is display:none and the
-     sky is plain CSS on the body — skip the starfield entirely. */
-  if (window.matchMedia("(pointer: coarse)").matches) return;
 
   const canvas = document.getElementById("stage-motes");
   const ctx = canvas.getContext("2d");
