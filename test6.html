@@ -1,0 +1,2074 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>The Diwan of Montasir Abbas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Karla:wght@400;500;700&family=Amiri:ital@0;1&family=Tajawal:wght@400;500;700&display=swap">
+
+<style>
+  /* ============================================================
+     THEME TOKENS — sky-first: default = light blue day sky with
+     golden stars; dark mode = deep night-blue sky with white stars
+     ============================================================ */
+  :root {
+    --bg:          #d9ebf8;
+    --bg-glow-1:   rgba(255, 255, 255, 0.55);
+    --bg-glow-2:   rgba(201, 154, 43, 0.12);
+    --panel:       #f6fbff;
+    --panel-edge:  rgba(29, 51, 73, 0.12);
+    --ink:         #1d3349;
+    --ink-soft:    #4c6a85;
+    --ink-faint:   #7f9ab0;
+    --accent:      #b07f16;
+    --accent-ink:  #f6fbff;
+    --accent-soft: rgba(176, 127, 22, 0.14);
+    --line:        rgba(29, 51, 73, 0.16);
+    --shadow:      0 18px 40px rgba(29, 51, 73, 0.16);
+    --mote-rgb:    176, 127, 22;   /* star color (r,g,b) */
+    --mote-alpha:  0.65;           /* star brightness multiplier */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:          #0d1b2e;
+      --bg-glow-1:   rgba(126, 174, 223, 0.14);
+      --bg-glow-2:   rgba(217, 164, 65, 0.10);
+      --panel:       #14263c;
+      --panel-edge:  rgba(232, 241, 250, 0.10);
+      --ink:         #e8f1fa;
+      --ink-soft:    #9db4c9;
+      --ink-faint:   #64809b;
+      --accent:      #d9a441;
+      --accent-ink:  #0d1b2e;
+      --accent-soft: rgba(217, 164, 65, 0.15);
+      --line:        rgba(232, 241, 250, 0.13);
+      --shadow:      0 20px 50px rgba(0, 0, 0, 0.45);
+      --mote-rgb:    240, 246, 255;
+      --mote-alpha:  1;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:          #0d1b2e;
+    --bg-glow-1:   rgba(126, 174, 223, 0.14);
+    --bg-glow-2:   rgba(217, 164, 65, 0.10);
+    --panel:       #14263c;
+    --panel-edge:  rgba(232, 241, 250, 0.10);
+    --ink:         #e8f1fa;
+    --ink-soft:    #9db4c9;
+    --ink-faint:   #64809b;
+    --accent:      #d9a441;
+    --accent-ink:  #0d1b2e;
+    --accent-soft: rgba(217, 164, 65, 0.15);
+    --line:        rgba(232, 241, 250, 0.13);
+    --shadow:      0 20px 50px rgba(0, 0, 0, 0.45);
+    --mote-rgb:    240, 246, 255;
+    --mote-alpha:  1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { overflow-x: clip; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Karla", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Arabic interface mode — sans UI face, no latin letterspacing */
+  :root[lang="ar"] body,
+  :root[lang="ar"] input,
+  :root[lang="ar"] button,
+  :root[lang="ar"] textarea {
+    font-family: "Tajawal", "Segoe UI", system-ui, sans-serif;
+  }
+  :root[lang="ar"] .role,
+  :root[lang="ar"] .contact-label,
+  :root[lang="ar"] .collection-title,
+  :root[lang="ar"] .story-label,
+  :root[lang="ar"] .song-label,
+  :root[lang="ar"] .hero-eyebrow,
+  :root[lang="ar"] .poem-eyebrow,
+  :root[lang="ar"] .letter-by {
+    letter-spacing: 0;
+  }
+
+  /* Ambient sky glow behind everything (static — the starfield canvas
+     carries the motion; animating this fixed layer triggers iOS Safari
+     compositing bugs that blank the page content) */
+  .stage-light {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(42rem 30rem at 78% 12%, var(--bg-glow-1), transparent 65%),
+      radial-gradient(38rem 34rem at 12% 85%, var(--bg-glow-2), transparent 65%);
+  }
+  /* Drifting motes & musical notes, drawn on canvas */
+  .stage-motes {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stage-motes { display: none; }
+    * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
+  }
+
+  .frame {
+    position: relative;
+    z-index: 1;
+    /* own GPU layer — keeps content composited above the fixed sky
+       layers through iOS rotation */
+    transform: translateZ(0);
+    max-width: 76rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 4rem;
+  }
+
+  /* ============================================================
+     TOP BANNER — name, portrait, contact
+     ============================================================ */
+  header.masthead {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);
+  }
+  .portrait {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    flex: none;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 5px var(--accent-soft);
+    background: var(--accent-soft);
+    /* Placeholder monogram styling (used until a real photo replaces it) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-size: 1.7rem;
+    color: var(--accent);
+  }
+  .masthead-id { flex: 1 1 14rem; }
+  .masthead-id h1 {
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  .masthead-id .role {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+  .contact {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .contact-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    width: 100%;
+    text-align: end;
+  }
+  .contact a.email-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .contact a.email-pill:hover,
+  .contact a.email-pill:focus-visible {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .contact button.copy {
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .contact button.copy:hover,
+  .contact button.copy:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ============================================================
+     FEATURED WORK HERO — spotlights the newest poem or song
+     ============================================================ */
+  section.hero {
+    position: relative;
+    overflow: hidden;
+    margin-top: 1.5rem;
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    box-shadow: var(--shadow);
+  }
+  .hero-mark {
+    position: absolute;
+    top: -2.5rem;
+    inset-inline-end: 0.5rem;
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-size: 11rem;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.09;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .hero h2 {
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    line-height: 1.1;
+    text-wrap: balance;
+    margin-bottom: 0.9rem;
+  }
+  .hero-excerpt {
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+    max-width: 36rem;
+    margin-bottom: 1.5rem;
+  }
+  .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .btn-gold, .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.3rem;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+  }
+  .btn-gold {
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .btn-gold:hover, .btn-gold:focus-visible { transform: translateY(-2px); }
+  .btn-ghost {
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+  }
+  .btn-ghost:hover, .btn-ghost:focus-visible {
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+  }
+
+  /* ============================================================
+     TWO-PANE LAYOUT — collection (left) + reading pane (right)
+     ============================================================ */
+  .diwan {
+    display: grid;
+    grid-template-columns: 19rem 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    align-items: start;
+  }
+
+  nav.collection {
+    position: sticky;
+    top: 1.5rem;
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 0 0.75rem;
+    overflow: hidden;
+  }
+  .collection-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    padding: 0 1.25rem 0.75rem;
+  }
+  .search-wrap { padding: 0 1rem 0.9rem; }
+  .search-wrap input {
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.88rem;
+  }
+  .search-wrap input::placeholder { color: var(--ink-faint); }
+  .search-wrap input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  ul.poem-list { list-style: none; }
+  ul.poem-list li { border-top: 1px solid var(--line); }
+  ul.poem-list button {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    width: 100%;
+    text-align: start;
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-size: 1.02rem;
+    position: relative;
+    transition: color 0.18s ease, background 0.18s ease;
+  }
+  ul.poem-list button::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+  }
+  ul.poem-list button:hover,
+  ul.poem-list button:focus-visible {
+    color: var(--ink);
+    background: var(--accent-soft);
+  }
+  ul.poem-list button[aria-current="true"] {
+    color: var(--ink);
+    background: var(--accent-soft);
+  }
+  ul.poem-list button[aria-current="true"]::before { transform: scaleY(1); }
+  .song-badge {
+    flex: none;
+    font-family: "Karla", sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+  }
+  .empty-note {
+    padding: 0.9rem 1.25rem;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ============================================================
+     READING PANE
+     ============================================================ */
+  main.reading {
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    box-shadow: var(--shadow);
+    padding: clamp(1.5rem, 4vw, 3rem);
+    min-height: 30rem;
+  }
+  .poem-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    margin-bottom: 1rem;
+  }
+  .poem-eyebrow .tag { color: var(--accent); }
+  h2.poem-title {
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+    line-height: 1.12;
+    text-wrap: balance;
+    margin-bottom: 0.5rem;
+  }
+  .dedication {
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 1.75rem;
+  }
+  .poem-body {
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-size: 1.28rem;
+    line-height: 1.95;
+    max-width: 34rem;
+  }
+  .poem-body[dir="rtl"] {
+    font-family: "Amiri", "EB Garamond", serif;
+    font-size: 1.45rem;
+    line-height: 2.15;
+  }
+  .poem-body .stanza { margin-bottom: 1.6rem; }
+  .poem-body .line {
+    display: block;
+    opacity: 0;
+    transform: translateY(0.5rem);
+    animation: recite 0.7s ease forwards;
+    animation-delay: var(--d, 0s);
+  }
+  @keyframes recite {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .rule {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 2.25rem 0 1.5rem;
+  }
+  .song-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    margin-bottom: 1rem;
+  }
+  .song-label .note-glyph { color: var(--accent); font-size: 1rem; letter-spacing: 0; }
+  .video-shell {
+    position: relative;
+    width: 100%;
+    max-width: 40rem;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--panel-edge);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow);
+  }
+  .video-shell iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 1rem;
+  }
+  .video-placeholder .big-note {
+    font-size: 2.2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .watch-link {
+    display: inline-block;
+    margin-top: 0.9rem;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 1px;
+  }
+  .watch-link:hover { border-bottom-width: 2px; }
+
+  .song-credit {
+    margin-top: 0.9rem;
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .song-credit[dir="rtl"] { font-family: "Amiri", "EB Garamond", serif; }
+  .audio-shell {
+    max-width: 40rem;
+    margin-top: 1rem;
+  }
+  .audio-shell audio { width: 100%; }
+
+  /* ============================================================
+     LETTERS FROM READERS — moderated comments
+     ============================================================ */
+  .letters { margin-top: 0.5rem; }
+  .letter {
+    border-inline-start: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.9rem;
+    max-width: 40rem;
+  }
+  .letter p {
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .letter .letter-by {
+    font-family: "Karla", sans-serif;
+    font-style: normal;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    margin-top: 0.5rem;
+  }
+  .letter-form { max-width: 40rem; display: grid; gap: 0.6rem; }
+  .letter-form input[type="text"],
+  .letter-form textarea {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.92rem;
+  }
+  .letter-form textarea {
+    min-height: 6.5rem;
+    resize: vertical;
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-size: 1.05rem;
+  }
+  .letter-form input::placeholder,
+  .letter-form textarea::placeholder { color: var(--ink-faint); }
+  .letter-form input:focus-visible,
+  .letter-form textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .letter-form .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .letter-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .letter-note {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+  .letter-status {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ============================================================
+     MY STORY + SOCIALS + FOOTER
+     ============================================================ */
+  section.story {
+    margin-top: 1.5rem;
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    box-shadow: var(--shadow);
+  }
+  .story-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+  .story-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+  }
+  .lang-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .lang-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .lang-toggle button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+  .story-text[lang="ar"] { direction: rtl; }
+  .story-text[lang="ar"] h2 {
+    font-family: "Amiri", "Fraunces", Georgia, serif;
+  }
+  .story-text[lang="ar"] p {
+    font-family: "Amiri", "EB Garamond", Georgia, serif;
+    font-size: 1.22rem;
+    line-height: 2.05;
+  }
+  .story-photo {
+    float: inline-end;
+    width: min(240px, 42vw);
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: bottom;
+    border-radius: 1rem;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 6px var(--accent-soft), var(--shadow);
+    margin-inline-start: 1.5rem;
+    margin-bottom: 1rem;
+    background: radial-gradient(120% 100% at 50% 100%, var(--accent-soft), transparent 75%);
+  }
+  @media (max-width: 560px) {
+    .story-photo {
+      float: none;
+      display: block;
+      margin: 0 auto 1.25rem;
+      width: min(280px, 70vw);
+    }
+  }
+  section.story h2 {
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+    line-height: 1.2;
+    text-wrap: balance;
+    margin-bottom: 1rem;
+  }
+  section.story p {
+    font-family: "EB Garamond", "Amiri", Georgia, serif;
+    font-size: 1.12rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+  section.story p + p { margin-top: 1rem; }
+
+  .socials {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .socials a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .socials a:hover, .socials a:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-3px);
+  }
+  .socials svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
+
+  footer.colophon {
+    margin-top: 1.25rem;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+  }
+  footer.colophon a { color: var(--accent); text-decoration: none; }
+
+  /* ============================================================
+     TOUCH DEVICES — disable desktop-only effects that trigger
+     iOS Safari compositing bugs (content blanking on rotation):
+     sticky positioning, backdrop blur, forced GPU layer.
+     ============================================================ */
+  @media (pointer: coarse) {
+    header.masthead {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    nav.collection { position: static; }
+    .frame { transform: none; }
+    /* No fixed layers at all on touch devices — the sky lives on the
+       body itself. iOS Safari blanks page content when fixed layers
+       are re-composited on rotation. */
+    .stage-light, .stage-motes { display: none; }
+    body {
+      background:
+        radial-gradient(42rem 30rem at 78% 12%, var(--bg-glow-1), transparent 65%),
+        radial-gradient(38rem 34rem at 12% 85%, var(--bg-glow-2), transparent 65%),
+        var(--bg);
+    }
+  }
+
+  /* ============================================================
+     RESPONSIVE — collection collapses above the reading pane
+     ============================================================ */
+  @media (max-width: 780px) {
+    .diwan { grid-template-columns: 1fr; }
+    nav.collection { position: static; }
+    .contact-label { text-align: left; }
+  }
+</style>
+
+<div class="stage-light" aria-hidden="true"></div>
+<canvas class="stage-motes" id="stage-motes" aria-hidden="true"></canvas>
+
+<div class="frame">
+
+  <header class="masthead">
+    <img class="portrait" id="portrait-img" alt="منتصر عباس — Montasir Abbas">
+    <div class="masthead-id">
+      <h1 id="site-name">منتصر عباس</h1>
+      <p class="role" id="site-role">شاعر &middot; كاتب أغانٍ &middot; ملحّن &middot; مغنٍّ</p>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language / اللغة">
+      <button type="button" data-lang="ar" aria-pressed="true">العربية</button>
+      <button type="button" data-lang="en" aria-pressed="false">English</button>
+    </div>
+    <div class="contact">
+      <span class="contact-label" id="contact-label">للأمسيات الشعرية والتراخيص والتعاون الفنّي</span>
+      <a class="email-pill" href="mailto:montasir.abbas@gmail.com">montasir.abbas@gmail.com</a>
+      <button class="copy" id="copy-email" type="button">نسخ</button>
+    </div>
+  </header>
+
+  <!-- Featured work — filled by JS from FEATURED_ID below -->
+  <section class="hero" id="hero" hidden></section>
+
+  <div class="diwan">
+    <nav class="collection" aria-label="Poem collection">
+      <p class="collection-title" id="collection-title">الديوان</p>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="ابحث في العناوين…" aria-label="Search poem titles">
+      </div>
+      <ul class="poem-list" id="poem-list"></ul>
+      <p class="empty-note" id="empty-note" hidden>لا توجد عناوين مطابقة.</p>
+    </nav>
+
+    <main class="reading" id="reading" aria-live="polite"></main>
+  </div>
+
+  <!-- MY STORY — replace this placeholder text with your own story -->
+  <section class="story" id="story">
+    <div class="story-head">
+      <p class="story-label" id="story-label">حكايتي</p>
+    </div>
+    <img class="story-photo" id="story-photo" alt="منتصر عباس — Montasir Abbas">
+
+    <div class="story-text" lang="en" id="story-en" hidden dir="ltr">
+      <h2>The engineer who never stopped writing</h2>
+      <p>
+        By profession I am an engineer and a professor. I have spent my career
+        studying how things move — traffic through cities, signals through
+        intersections, patterns through data — and teaching others to see the
+        hidden order in what looks like chaos. It turns out that is also a fair
+        description of writing a poem.
+      </p>
+      <p>
+        Poetry came first, long before the equations. I grew up in Arabic — it
+        is the language of my heart, the one I read art and poetry in — while
+        English became the language of my profession, the one I read science
+        in. I am a poet, a songwriter, a composer, and a singer: some of these
+        poems stayed on the page, and others would not sit still until I gave
+        them a melody and a voice. Lately my two lives have even started
+        collaborating — my research has taught machines to understand the
+        instruments I love: the oud, the qanun, the violin.
+      </p>
+      <p>
+        This diwan is where all of it lives together: the written word and the
+        sung word, the two languages, the professor and the poet. If something
+        here moves you — as a reader, a fellow musician, a publisher, or a
+        producer — I would love to hear from you.
+      </p>
+    </div>
+
+    <div class="story-text" lang="ar" id="story-ar">
+      <h2>المهندس الذي لم يتوقف عن الكتابة</h2>
+      <p>
+        أنا مهندسٌ وأستاذٌ جامعيٌّ بحكم المهنة. أمضيتُ مسيرتي المهنيّة أدرسُ
+        كيف تتحرّك الأشياء — المرورُ في المدن، والإشاراتُ في التقاطعات،
+        والأنماطُ في البيانات — وأعلّمُ الآخرين أن يروا النظامَ الخفيَّ فيما
+        يبدو فوضى. وقد تبيّن أنّ هذا وصفٌ صادقٌ لكتابة القصيدة أيضًا.
+      </p>
+      <p>
+        جاء الشعرُ أوّلًا، قبل المعادلات بزمنٍ طويل. نشأتُ في حضن العربيّة —
+        فهي لغةُ القلب، وبها أقرأ الفنَّ والشعر — بينما صارت الإنجليزيّةُ
+        لغةَ مهنتي، وبها أقرأ العلم. أنا شاعرٌ وكاتبُ أغانٍ وملحّنٌ ومغنٍّ:
+        بعضُ هذه القصائد بقيت على الورق، وبعضُها أبى أن يهدأ حتى وهبتُه
+        لحنًا وصوتًا. بل إنّ حياتَيَّ الاثنتين بدأتا تتعاونان مؤخّرًا: فقد
+        علّمتْ أبحاثي الآلةَ الذكيّة أن تفهم الآلاتِ التي أحبّ: العودَ
+        والقانونَ والكمان.
+      </p>
+      <p>
+        هذا الديوانُ هو حيث يجتمع ذلك كلُّه: الكلمةُ المكتوبةُ والكلمةُ
+        المغنّاة، واللغتان، والأستاذُ والشاعر. فإن حرّك شيءٌ هنا قلبَك —
+        قارئًا كنتَ أو موسيقيًّا أو ناشرًا أو منتجًا — فيسعدني أن أسمع منك.
+      </p>
+    </div>
+  </section>
+
+  <div class="socials" id="socials" aria-label="Social media"></div>
+
+  <footer class="colophon">
+    <p>&copy; <span id="year"></span> <span id="foot-name">منتصر عباس</span> &middot;
+       <span id="foot-rights">جميع القصائد والأغاني من تأليف وتلحين الشاعر</span> &middot;
+       <a id="foot-contact" href="mailto:montasir.abbas@gmail.com">راسلني</a></p>
+  </footer>
+
+</div>
+
+<script>
+/* Temporary diagnostic: surface any runtime error visibly (helps
+   debug mobile browsers with no console). Remove once stable. */
+window.onerror = function (msg, src, line, col) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#b00020;color:#fff;font:13px monospace;padding:8px;direction:ltr;text-align:left";
+  d.textContent = "JS error: " + msg + " @ " + line + ":" + col;
+  document.body.appendChild(d);
+};
+
+/* ==============================================================
+   YOUR POEMS LIVE HERE — edit this array and nothing else.
+   Each poem: {
+     id,
+     youtube: 11-char video ID, or "" if no song yet,
+     audio: "recordings/my-song.mp3" (optional audio player),
+     comments: [{name, date, text}, ...] (optional — approved
+       reader letters; new letters reach you BY EMAIL first, and
+       nothing appears on the site until you add it here),
+     ar: { title, tags, dedication (optional),
+           stanzas: [[lines...], ...] }   — the Arabic ORIGINAL
+     en: { same shape }                   — the English TRANSLATION,
+           shown when the visitor switches the site to English.
+           Omit `en` to show the Arabic original in both modes.
+   }
+   The six poems below are SAMPLE placeholders — replace them
+   with your own work.
+   ============================================================== */
+const POEMS = [
+  {
+    id: "ya-wardatan",
+    youtube: "c9CM69d4SJ0",
+    ar: {
+      title: "يا وَرْدَةً",
+      tags: ["أغنية", "حب"],
+      dedication: "",
+      stanzas: [
+        [
+          "يا وَرْدَةً فِي عالَـمِي",
+          "إِنِّي أُحِبُّكِ فاعْلَمِي",
+          "يا بَلْسَمًا فِي خاطِرِي",
+          "مِنْ كُلِّ شَيْءٍ مُؤْلِمِي"
+        ],
+        [
+          "تِلْكَ العُيُونُ عَرَفْتُهَا",
+          "فِي كُلِّ حُلْمٍ ضَمَّنِي",
+          "فِي كُلِّ أَرْضٍ زُرْتُهَا",
+          "فِي كُلِّ طَيْفٍ شَدَّنِي"
+        ],
+        [
+          "وَحَبِيبَتِي إِنْ تَعْلَمِي",
+          "الشَّوْقُ دَرْبِي… مُلْهَمِي",
+          "وَالْحَقُّ حَتْمًا يَسْتَحِقُّ",
+          "بِأَنْ يُقَالَ عَلَى فَمِي"
+        ],
+        [
+          "قَدَرِي طَوَانِي هَاهُنَا",
+          "بَيْنَ الزَّمَانِ وَبَيْنَنَا",
+          "نَجْمَانِ مِنْ كَوْنٍ بَعِيدٍ",
+          "مُلْتَقَانَا حُلْمُنَا"
+        ]
+      ]
+    }
+  },
+  {
+    id: "tayeh",
+    youtube: "AWQjKMMWRrc",
+    ar: {
+      title: "تايِه",
+      tags: ["أغنية", "حنين"],
+      dedication: "",
+      stanzas: [
+        [
+          "بقِيت تايِه",
+          "بِتْسأَل عَنْكِ الأَفراح",
+          "وانَا السَّاكِت",
+          "بعايِن للخَيَال الراح"
+        ],
+        [
+          "فِي ليلة صيف",
+          "عيونِك دافيَه فِيهَا بَريق",
+          "ولمحَة طيف",
+          "منَ المَاضِي الحَزِين والضيق"
+        ],
+        [
+          "كَتبنا مِنَ الدُّمُوع ضَحْكَات",
+          "بعد كلمات تغص الرِّيق",
+          "وَشُفنا حَياتنا فِي لَحَظَات",
+          "وكيفْ كان الأَمَلْ تَلفيق"
+        ],
+        [
+          "ونرْجع تَانِي نِتْكَلّم",
+          "و يبقى كلامنا زَيّ النِّيل",
+          "بيجري مَعَ العُرُوقْ بلْسم",
+          "و يروِي الشَّوق و سَهَرْ اللَّيل"
+        ],
+        [
+          "ونرْفُض تَانِي نتأَلم",
+          "وتِبقَى الذِّكرَى لينا دَليل",
+          "بإِننا كُنَّا مَا بنحَلم",
+          "وإِنُّو الشَّوق كَأَنُّو السَّيل"
+        ]
+      ]
+    }
+  },
+  {
+    id: "qul-liljamila",
+    youtube: "7kWFOColhb8",
+    ar: {
+      title: "قُلْ لِلْجَمِيلَةِ",
+      tags: ["أغنية", "غزل"],
+      dedication: "",
+      stanzas: [
+        [
+          "قُلْ لِلْجَمِيلَةِ مَا لَهَا فِي خَاطِرِي",
+          "مُنْذُ الصَّبَاحِ بِسِحْرِهَا الْقَتَّالِ",
+          "وَكَأَنَّهُ سِرُّ الْعُيُونِ يَشُدُّنِي",
+          "نَحْوَ النُّجُومِ يُعِدُّنِي لِسُؤَالِي",
+          "مَاذَا بِذِهْنِكِ؟ إِنَّ نَجْمِي دَلَّنِي",
+          "أَلْقِي السُّؤَالَ وَقَدِّرِي أَحْوَالِي",
+          "وَتَرَفَّقِي، فَالنَّبْضُ أَصْبَحَ خَافِتًا",
+          "مُتَوَجِّسًا إِنْ رَدَّنِي إِقْبَالِي"
+        ],
+        [
+          "مَاذَا، سَأَلْتُكِ، هَلْ ذَكَرْتِ مَوَدَّتِي",
+          "عِنْدَ الْبَعِيدِ، أَوِ الْقَرِيبِ الْغَالِي؟",
+          "هَلْ جَاءَ طَيْفِي فِي مَنَامِكِ سَارِيًا",
+          "وَصَحَوْتِ من شَوْقٍ فَجَاءَ خَيَالِي؟",
+          "هَلْ دَقَّ قَلْبُكِ ثُمَّ أَطْرَقَ مُدْرِكًا",
+          "أَنَّ الَّذِي بَيْنَ الضُّلُوعِ مِثَالِي؟",
+          "وَسَمِعْتِ مَا حَمَلَ النَّسِيمُ مُطَيِّبًا",
+          "قَوْلَ الْفُؤَادِ إِلَى الْفُؤَادِ: تَعَالِي؟"
+        ]
+      ]
+    }
+  },
+  {
+    id: "inti-aljamal",
+    youtube: "utyHXways0U",
+    ar: {
+      title: "انتي الجمال",
+      tags: ["أغنية", "غزل"],
+      dedication: "",
+      stanzas: [
+        [
+          "انتي الجمال، ماليك مثال",
+          "ضميني ليك",
+          "زي الطفل"
+        ],
+        [
+          "لحظات غرام، وانتي المرام",
+          "وانا في وجودك اكون ثمل"
+        ],
+        [
+          "واثق أنا",
+          "حبك هنا",
+          "في ليلنا والريد يكتمل"
+        ],
+        [
+          "خليك قريبة علي شديد",
+          "وانا زول حديد",
+          "ان شاءالله قلبك يحتمل"
+        ],
+        [
+          "تعبان سنين",
+          "برتاح متين",
+          "والقاهو وين",
+          "شافك وصل؟"
+        ]
+      ]
+    }
+  },
+  {
+    id: "janah-alshawq",
+    youtube: "",
+    ar: {
+      title: "جناح الشوق",
+      tags: ["شوق"],
+      dedication: "",
+      stanzas: [
+        [
+          "مِنْ يَوْمْ عِرِفتِكْ، والحنين، وأفكاري قالت لي: خطرْ",
+          "قاومت أفكاري، وزَويت إحساسي وادمنت السهرْ"
+        ],
+        [
+          "إلا البُعاد طوّل عليّ، ورجعت أسأل في حذرْ",
+          "وأنا فيكي شاغلت النجوم، حتى الوداع وقت السحرْ"
+        ],
+        [
+          "زاد الحنين، لما الرنين، نغماته غنت للمطرْ",
+          "قالت سلام، رفرف جناح شوقي البيتاوق للسفرْ"
+        ],
+        [
+          "وكأنها الأيام سنين، من يوم بعدنا من القمرْ",
+          "طوّلنا من نوره البعيد، وفضلنا ماشين بالأثرْ"
+        ],
+        [
+          "قالت بنرجع، يا لطيف، والفرحة للزول الصبرْ",
+          "لو ما البُعاد ما بتشتهو اللِّمّات، وما بيحلى السمرْ"
+        ],
+        [
+          "وأنا بس بيغلبني الكلام، لمن أشوف ضِحْك القدرْ",
+          "يا السمحة، ما الشوق من زمان غازل سِحابِك وانهمرْ"
+        ],
+        [
+          "عِطرِك سرى… عبر الأثير، خلب المسامع والنظرْ",
+          "طرِب الشعور، كتب الأغاني هواك ودقاها الوترْ"
+        ],
+        [
+          "جاني النسيم بعد السكون، داعب خيالي وافتكرْ",
+          "إنه المرام قالت سلام، فات الفتون حد السُّكرْ"
+        ]
+      ]
+    }
+  },
+  {
+    id: "man-ya-tura",
+    youtube: "",
+    ar: {
+      title: "من يا تُرى",
+      tags: ["غزل"],
+      dedication: "",
+      stanzas: [
+        [
+          "مَن يا تُرى",
+          "يستنطق الأفلاكَ في ضوء الليالي المُقمرة"
+        ],
+        [
+          "ويبوح سرًّا لحنُه",
+          "ويئن شعرًا شوقُه إن بثَّه عبر الأثير فلا يُرى"
+        ],
+        [
+          "مَن ذا الذي",
+          "جعل الحروفَ تفوح مسكًا في يديَّ، تعطّرًا"
+        ],
+        [
+          "جعل الأناملَ ثَمِلةً",
+          "تحنو وتلمس في رُضاب الخَدَر ذوبًا سُكَّرًا"
+        ],
+        [
+          "ماذا بعشقٍ بَلْسَمٍ",
+          "يطوي الجراحَ كأنها كانت سرابًا ما جرى"
+        ],
+        [
+          "ماذا بدفءٍ ضمّني",
+          "كالليل يجمع سرَّه، ويضم حبًّا مَن سرى"
+        ]
+      ]
+    }
+  },
+  {
+    id: "daqqat-qalbi",
+    youtube: "",
+    ar: {
+      title: "دقّاتُ قلبي",
+      tags: ["حب"],
+      dedication: "",
+      stanzas: [
+        [
+          "دقّاتُ قلبي أَفْصَحَتْ عن خَوْفِها",
+          "مالَ السُّكونُ يَرِنُّ داخلَ جَوْفِها؟",
+          "حتّى الضِّياءُ يَشِعُّ خارجَ شَمْسِهِ،",
+          "والأرضُ تَعْجَبُ في بُرودَةِ صَيْفِها.",
+          "وأنا أقولُ معَ النَّسيمِ بِهَمْسَتي:",
+          "يا مُنْيَتي… رُدِّي لها من وصفِها."
+        ],
+        [
+          "إنِّي أُحِبُّكِ، قُلْتُها وكَتَبْتُها",
+          "إنْ لمْ تَكوني قدْ سَمِعْتِ بِوَقْتِها.",
+          "وحَفَرْتُها في القلبِ، ثمَّ رَسَمْتُها",
+          "بِسِماتِ وجهي لوحةً، راقَبْتُها.",
+          "ماذا، بِرَبِّكِ، إنْ رَدَدْتِ بِكَلِمَةٍ،",
+          "فَلَثَمْتُ ثَغْرَكِ بعدَ أنْ قَبَّلْتُها."
+        ],
+        [
+          "قدْ عِشْتُ أعوامًا بِيَوْمَيْنِ فَقَطْ،",
+          "قُلْنا كلامًا بعدَ أحلامٍ رَسَتْ.",
+          "ثُمَّ اغْتَرَفْنا مِنْ سُيولٍ أَقْبَلَتْ،",
+          "حُبًّا وضَحِكًا وابْتِساماتٍ أَتَتْ.",
+          "فَعَرَفْتُ أنِّي في هَواكِ مُعَلَّقٌ،",
+          "حتّى يُكَلِّمَنِي الفُؤادُ وإنْ صَمَتْ."
+        ]
+      ]
+    }
+  },
+  {
+    id: "hatha-alhanin",
+    youtube: "",
+    ar: {
+      title: "هَذَا الحَنِينُ",
+      tags: ["حنين"],
+      dedication: "",
+      stanzas: [
+        [
+          "قالَتْ: سَأَكْتُمُ بَعْضَ هَوَاكَ في قَلْبِي،",
+          "حَتّى نُقاوِمَ مَوْجَ العِشْقِ وَالغَرَقِ.",
+          "قُلْتُ: اللَّيَالِي قَدْ رَجَفَتْ عَوَاصِفُهَا،",
+          "غَابَ الشُّرُوقُ بِخَوْفِ الرَّعْدِ وَالْبَرْقِ."
+        ],
+        [
+          "هَذَا الحَنِينُ يُحَرِّكُ فِي مَرَاكِبِنَا،",
+          "رُدِّي عَلَيَّ، فَقَدْ عَانَيْتُ مِنْ أَرَقِي.",
+          "ثَغْرِي يُنَادِي فِي الْأَسْحَارِ مِنْ ظَمَإٍ،",
+          "فَاسْقِي الشِّفَاهَ رُضَابَ العِشْقِ وَاسْتَبْقِي."
+        ]
+      ]
+    }
+  },
+  {
+    id: "lamahat-hawak",
+    youtube: "",
+    ar: {
+      title: "لَمْحاتْ هَواكْ",
+      tags: ["غزل"],
+      dedication: "",
+      stanzas: [
+        [
+          "لَمْحاتْ هَواكْ أَنَا هِمْتْ فِيها وَبِعِشْقَها",
+          "كَلِماتْ غَرامْ تَمَلَّكْنِي لَمَنْ أَنْطُقْها",
+          "يا العايْشَة فِي نَظَراتْي وَأَحْلامْ بِسْرِقْها",
+          "يا الدَّاخِلَه بى أَنْفاسِي رافِض أَمَرِّقْها"
+        ],
+        [
+          "أَنَا بَيْنْ نُجومْ اللَّيْلْ وَبَيْنْ سِحْرِ العُيُونْ",
+          "هيمان وبسرح بَيْنْ كَلامِكْ… وَالسُّكُونْ",
+          "بَأَسْمَعْ صَدَى الأَحْلامْ وَيِمْلِكْنِي الحَنِينْ",
+          "لِيك… وَالجَمالْ وَالرِّيدْ وَفِكْرِكْ وَالفُنُونْ"
+        ]
+      ]
+    }
+  },
+  {
+    id: "lamma-tabsum",
+    youtube: "",
+    ar: {
+      title: "لَمّا تَبْسُمْ",
+      tags: ["غزل"],
+      dedication: "",
+      stanzas: [
+        [
+          "لَمّا تَبْسُمْ،",
+          "تَبْقَى كُلِّ الدُّنْيا صافِيَةْ،",
+          "تِخْتِفِي الأَحْزانْ وَبَرْجَعْ…",
+          "كُلِّي عافِيَةْ.",
+          "وَلَمّا تَمْشِي،",
+          "تَمْشِي زَيِّ إيقاعْ قَصِيدَةْ،",
+          "وَزَيِّ نَغَمْ يِمْلانِي فَرْحَةْ، زولْ بِرِيدْها.",
+          "وَلَمّا تَضْحَكْ،",
+          "تَبْقَى كُلِّ الدُّنْيا ضاحِكَةْ،",
+          "وَالأَمَلْ يَرْجَعْ يِغَرِّدْ،",
+          "وَالأَمانِي بِتِلْقَى عِيدْها."
+        ],
+        [
+          "وَلَمّا أَرْجَعْ لِي عُيُونْها،",
+          "تَبْقَى دَقّاتْ قَلْبِي عالِيَةْ.",
+          "وَأَبْقَى سارِحْ فِي سُكُونْها،",
+          "وَراجِي مِنْها لَفْتَةْ غالِيَةْ."
+        ],
+        [
+          "وَلَمّا تَلْمَحْنِي وَتِسَلِّمْ،",
+          "تَبْتَسِمْ أَيّامِي تانِي.",
+          "وَلَمّا تَحْضُنِي بِرْموشْها،",
+          "تدِّي لِلأَيّامْ مَعاني"
+        ]
+      ]
+    }
+  },
+  {
+    id: "sahabat-sayf",
+    youtube: "",
+    ar: {
+      title: "ذكرتك زي سحابه صيف",
+      tags: ["حنين"],
+      dedication: "",
+      stanzas: [
+        [
+          "ذكرتك زي سحابه صيف",
+          "وكلمة ريد بعيده شديد",
+          "ورعدك في سماي مخيف",
+          "بيقطع في كياني وريد"
+        ],
+        [
+          "واهرب تاني منك كيف",
+          "وارجع كيف و كلي جراح",
+          "زي مطرا سحابه خفيف",
+          "وتحته الشوك وفوقه رياح"
+        ],
+        [
+          "وكنت زمان تشيلني الريح",
+          "ويجيبني الشوق مع الأفراح",
+          "وكنت بقول بشوفك يوم",
+          "وببقى الليل معاكي صباح"
+        ],
+        [
+          "أريدك كيف و أسيبك كيف",
+          "وأعيدك كيف و أجيبك وين",
+          "وأفكر كيف و فكري بعيد",
+          "وأشوفك كيف وقلبي حزين"
+        ]
+      ]
+    }
+  },
+  {
+    id: "wa-jitu-ilayki",
+    youtube: "",
+    ar: {
+      title: "وَجِئْتُ إِلَيْكِ",
+      tags: ["وجدان"],
+      dedication: "",
+      stanzas: [
+        [
+          "وَجِئْتُ إِلَيْكِ لا أَبْغِي زُهُورًا أَوْ رَيَاحِينَا",
+          "أُدَاعِبُ فِيكِ أَحْلَامًا فَأَنْسَى لَوْعَتِي حِينَا",
+          "وَأُرْسِلُ بَعْضَ أَشْوَاقِي مَعَ الأَنْغَامِ تَلْحِينًا",
+          "فَيَسْمَعُهَا مِنَ الخِلَّانِ مَنْ نَاجَيْتُهُ لِينَا"
+        ],
+        [
+          "وَجِئْتُ إِلَيْكِ فِي أَمَلٍ وَكَانَ الحُبُّ ثَالِثَنَا",
+          "وَكَانَ الصِّدْقُ عُنْوَانًا مِنَ الكَلِمَاتِ يَجْمَعُنَا",
+          "فَكَادَتْ كُلُّ آلَامِي عَلَى مَضَضٍ تُوَدِّعُنَا",
+          "فَلَا تَبْقَى بِأَيَّامِي تَأَاوِيلٌ تُلَاغِينَا"
+        ],
+        [
+          "وَلَكِنِّي عَلَى رَغْمِي ظَلَلْتُ أَلُمُّ أَشْتَاتِي",
+          "عَلَى رِيحٍ مِنَ المَاضِي أُغَالِبُهَا بِآهَاتِي",
+          "وَذِكْرَى فِي رِحَابِ الأَمْسِ كَانَتْ عِنْدَهَا ذَاتِي",
+          "وَتَرْمِينِي سِهَامُ الهَجْرِ مِمَّا كَانَ يَأْوِينَا"
+        ],
+        [
+          "وَأَحْمِلُ لَوْعَةً أُخْرَى، وَفَاءً حَافِظًا وَعْدِي",
+          "بِأَمْسٍ كَانَ يَغْمُرُنِي هَنَاءً فَانْتَهَى سَعْدِي",
+          "وَبَعْدَ نَدَاوَةِ الأَزْهَارِ عَادَ يَهُزُّنِي رَعْدِي",
+          "كَأَنَّ دَلَالَهَا حُلْمٌ غَرِيبٌ كَادَ يُرْدِينَا"
+        ],
+        [
+          "فَأَرْحَلُ عَنْكِ فِي وَجَلٍ أُوَدِّعُ فِيكِ ذَفَرَاتِي",
+          "وَأَبْكِي قِبْلَةَ المِحْرَابِ تَغْلِبُنِي نِهَايَاتِي",
+          "فَلَا أَدْرِي مِنَ الإِخْفَاقِ أَمْ مِنْ وَهْنِ صَلَوَاتِي",
+          "أَكَانَ الحُزْنُ إِيمَانِي أَمِ الآلَامُ لِي دِينَا"
+        ]
+      ]
+    }
+  },
+  {
+    id: "leh-ya-muntasir",
+    youtube: "",
+    ar: {
+      title: "لِيه يا مُنتَصِر؟",
+      tags: ["غربة"],
+      dedication: "",
+      stanzas: [
+        [
+          "شِيلوا الكَلام وَدُّوه لِلنّاس فِي مَصِر",
+          "رُدّوا السَّلام للنّاس هِناك مِن غير حَصِر"
+        ],
+        [
+          "بَس قولوا للطَّيف المُكافِح وَمُنعَصِر",
+          "لِيه العُيون سَهرانه وَالعُود مُنكسِر"
+        ],
+        [
+          "آه يا دُموع… لَو نَنسى وَالخوف يِنحَسِر",
+          "حَتّى الجُفون تسألني: لِيه يا مُنتَصِر؟"
+        ],
+        [
+          "تَعبان… وَكِيف بِقدر يِنوم مِن غير أمان",
+          "كِيف يِنسى لَمّة أَهلُه وَالنّاس الحُنان"
+        ],
+        [
+          "تَعبان… وَكِيف بِقدر يِنوم مِن غير أمان",
+          "كِيف يِنسى لَمّة أَهلُه وَالنّاس الحُنان"
+        ],
+        [
+          "كُل الحَكاوي الحِلوه وَالذِّكرى الزَّمان",
+          "كيف الضَّلام الكان بَعيد سَكَن المَكان"
+        ],
+        [
+          "آه يا دُموع… لَو نَنسى وَالخوف يِنحَسِر",
+          "حَتّى الجُفون تسألني: لِيه يا مُنتَصِر؟"
+        ]
+      ]
+    }
+  },
+  {
+    id: "ghallaqt",
+    youtube: "bvHv-5icNxg",
+    ar: {
+      title: "غلّقت",
+      tags: ["أغنية", "وجدان"],
+      dedication: "",
+      stanzas: [
+        [
+          "غَلَّقْتُ أَبْوابَ الفُؤادِ",
+          "عَلى هَواكِ بِما حَبَكْ",
+          "وَحَشَدْتُ بَحْرَ خَواطِري",
+          "فُلْكاً تَسيرُ إِلى فَلَكْ",
+          "وَسَأَلْتُ عُمْراً قَدْ مَضى",
+          "ما بالُ قَلْبِيَ إِنْ هَلَكْ",
+          "والطَّيْفُ عادَ مُنادِياً",
+          "يا بَعْدَ عُمْري، هَيْتَ لَكْ"
+        ],
+        [
+          "هَلْ كانَ حُلْماً عِشْتُهُ",
+          "بَيْنَ المَرافِئِ وَالسُّحُبْ؟",
+          "أَمْ كانَ يسرِي في دَمِي",
+          "ما عُدْتُ أَعْرِفُ ما السَّبَبْ؟",
+          "يا قَبْلَ عُمْري، ما لَنا",
+          "جِئْنا وَسارقنا الخَبَبْ؟",
+          "مَنْ ذا يُفَرِّقُ بيننا",
+          "تَبَّتْ يَداهُ أَبا لَهَبْ!"
+        ]
+      ]
+    }
+  },
+  {
+    id: "duqqi-ya-awtar",
+    youtube: "5pSeMvdVVaI",
+    ar: {
+      title: "دقي يا أوتار",
+      tags: ["أغنية", "طرب"],
+      dedication: "",
+      stanzas: [
+        [
+          "يا قرين الروح",
+          "لما بتمشي تروح",
+          "القليب حزنان وداكن",
+          "وانا كلي جروح"
+        ],
+        [
+          "يا صباح الخير",
+          "لو فؤادي بيطير",
+          "في علالي سماك وساكن",
+          "بين سحابه مطير"
+        ],
+        [
+          "دقي يا أوتار",
+          "بوحي بالاسرار",
+          "خلي للمحبوب مساكن",
+          "عالية للأقمار"
+        ],
+        [
+          "يلا يا أفراح",
+          "شيلي مني الراح",
+          "خلي فكري رخيم و راكن",
+          "والخيال مرتاح"
+        ]
+      ]
+    }
+  },
+  {
+    id: "laqeet-almays",
+    youtube: "",
+    ar: {
+      title: "لقيت الميس",
+      tags: ["ونس"],
+      dedication: "",
+      stanzas: [
+        [
+          "لقيت الميس",
+          "وأصلو الميس بيكون في كلام",
+          "بيخلي الروح تكون في سلام",
+          "ولو غرقان من الالام",
+          "بيبني الطوف من الاحلام"
+        ],
+        [
+          "واصلو الميس بذكرى زمان",
+          "في قعدة شاي بحب و حنان",
+          "ولفتة جميلة من إنسان",
+          "عشان عاوزك تكون فرحان"
+        ]
+      ]
+    }
+  },
+  {
+    id: "albarid",
+    youtube: "HOmHTYyTkyg",
+    ar: {
+      title: "البريد",
+      tags: ["أغنية", "عتاب"],
+      dedication: "",
+      stanzas: [
+        [
+          "البريد برضاك يفكّر",
+          "و البيفوت ياريت يبكّر",
+          "نحن ما بنهون وحاتك",
+          "لابنهاتي ولا بنذكر"
+        ],
+        [
+          "كنا يوم طالبين وصالك",
+          "للوداد الفيك و فينا",
+          "كنا منتظرين خصالك",
+          "تبقى نور وسلام علينا"
+        ],
+        [
+          "إلا جيت خيبت ظني",
+          "لما قايلنك تجيبنا",
+          "للأمان الشلتو مني",
+          "وكنا قايلنك حبيبنا"
+        ],
+        [
+          "انتهت أيامنا دارت",
+          "شالت أحلامنا الجميلة",
+          "لما كل القصة بانت",
+          "إني في دربك وسيلة"
+        ]
+      ]
+    }
+  }
+];
+
+/* The hero spotlight: "rotate" features a different work each day,
+   or set a poem id (e.g. "ya-wardatan") to pin one permanently. */
+const FEATURED_ID = "rotate";
+
+/* READER LETTERS — live moderated comments.
+   Paste your Google Apps Script web-app URL here (see comments-backend.gs
+   in the repo for the script + setup steps). With it set, letters are
+   stored as PENDING, you get an email with one-click approve/reject
+   links, and approved letters appear automatically under their poem. */
+const COMMENTS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwdQ18uipLLl5T9uXKfpvNeidvXKuoNjliYKZOR_5NC67tKHfZetohyThHb_Nt5S44Smg/exec";
+
+/* Fallbacks used only while COMMENTS_ENDPOINT is empty: Web3Forms key
+   (email-only delivery), else the reader's own email app. */
+const WEB3FORMS_KEY = "";
+const CONTACT_EMAIL = "montasir.abbas@gmail.com";
+
+/* ==============================================================
+   INTERFACE LANGUAGE — global toggle, Arabic is the default.
+   Poems keep their own language regardless of the UI language.
+   ============================================================== */
+const STR = {
+  ar: {
+    dir: "rtl",
+    name: "منتصر عباس",
+    role: "شاعر · كاتب أغانٍ · ملحّن · مغنٍّ",
+    contactLabel: "للأمسيات الشعرية والتراخيص والتعاون الفنّي",
+    copy: "نسخ", copied: "نُسخ!",
+    collection: "الديوان",
+    searchPh: "ابحث في العناوين…",
+    empty: "لا توجد عناوين مطابقة.",
+    songBadge: "&#9834; أغنية",
+    latestSong: "أحدث أغنية", latestPoem: "أحدث قصيدة",
+    dailySong: "أغنية اليوم", dailyPoem: "قصيدة اليوم",
+    heroRead: "اقرأ القصيدة", heroListen: "&#9834; استمع إلى الأغنية",
+    theSong: "الأغنية",
+    videoSoon: "الأغنية مسجَّلة &mdash; الفيديو قريبًا.",
+    watch: "شاهد على يوتيوب &#8599;",
+    credit: "كلماتٌ ولحنٌ وغناء: منتصر عباس",
+    letters: "رسائل القرّاء",
+    namePh: "اسمك (اختياري)",
+    msgPh: "اكتب انطباعك عن هذه القصيدة…",
+    send: "أرسل إلى الشاعر",
+    lettersNote: "تُقرأ الرسائل شخصيًّا ولا تُنشر إلا بعد المراجعة.",
+    writeFirst: "اكتب بضع كلمات أولًا.",
+    sending: "جارٍ الإرسال…",
+    sent: "رسالتك في طريقها إلى الشاعر. شكرًا لك.",
+    mailtoNote: "سيفتح تطبيق البريد لديك الآن — أو راسلني مباشرة على " + CONTACT_EMAIL + ".",
+    sentPending: "وصلت رسالتك، وستظهر هنا بعد موافقة الشاعر. شكرًا لك.",
+    anon: "زائر",
+    storyLabel: "حكايتي",
+    footRights: "جميع القصائد والأغاني من تأليف وتلحين الشاعر",
+    footContact: "راسلني"
+  },
+  en: {
+    dir: "ltr",
+    name: "Montasir Abbas",
+    role: "Poet · Songwriter · Composer · Singer",
+    contactLabel: "For readings, licensing & collaboration",
+    copy: "Copy", copied: "Copied!",
+    collection: "The Collection",
+    searchPh: "Search titles…",
+    empty: "No titles match.",
+    songBadge: "&#9834; song",
+    latestSong: "The Latest Song", latestPoem: "The Latest Poem",
+    dailySong: "Today's Song", dailyPoem: "Today's Poem",
+    heroRead: "Read the poem", heroListen: "&#9834; Hear the song",
+    theSong: "The Song",
+    videoSoon: "Song recorded &mdash; video coming soon.<br>(Paste the YouTube video ID into the POEMS array to embed it here.)",
+    watch: "Watch on YouTube &#8599;",
+    credit: "Written, composed, and performed by Montasir Abbas",
+    letters: "Letters from Readers",
+    namePh: "Your name (optional)",
+    msgPh: "Write your thoughts about this poem…",
+    send: "Send to the poet",
+    lettersNote: "Letters are read personally and published only after review.",
+    writeFirst: "Please write a few words first.",
+    sending: "Sending…",
+    sent: "Your letter is on its way to the poet. Thank you.",
+    mailtoNote: "Your email app should open now — or write directly to " + CONTACT_EMAIL + ".",
+    sentPending: "Your letter has been received — it will appear here once the poet approves it. Thank you.",
+    anon: "Anonymous",
+    storyLabel: "My Story",
+    footRights: "All poems and songs are written and composed by the author",
+    footContact: "Get in touch"
+  }
+};
+let LANG = "ar";
+try { LANG = localStorage.getItem("diwan-lang") || "ar"; } catch (e) {}
+if (!STR[LANG]) LANG = "ar";
+const T = (k) => STR[LANG][k];
+
+/* Your social profiles — replace the placeholder handles with your own,
+   or set url to "" to hide an icon. */
+const SOCIALS = [
+  { name: "YouTube",   url: "https://www.youtube.com/@MontasirAbbas" },
+  { name: "Facebook",  url: "https://www.facebook.com/montasir.m.abbas" },
+  { name: "LinkedIn",  url: "https://www.linkedin.com/in/montasir-abbas-35a14a18/" },
+  { name: "Instagram", url: "https://www.instagram.com/montasirabbas/" },
+  { name: "TikTok",    url: "https://www.tiktok.com/@montasirmabbas" }
+];
+
+/* Portrait photo (embedded so the site stays a single file) */
+const PORTRAIT_SRC = "";
+document.getElementById("portrait-img").src = PORTRAIT_SRC;
+/* Story photo — cropped from the gathering selfie; the banner keeps the logo portrait above */
+const STORY_PHOTO_SRC = "";
+document.getElementById("story-photo").src = STORY_PHOTO_SRC;
+
+/* ============================================================== */
+const listEl    = document.getElementById("poem-list");
+const readingEl = document.getElementById("reading");
+const searchEl  = document.getElementById("search");
+const emptyEl   = document.getElementById("empty-note");
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const VALID_ID = /^[A-Za-z0-9_-]{11}$/;
+const hasSong  = (p) => p.youtube !== "" || !!p.audio;
+
+/* The version of a poem for the current UI language.
+   Falls back to the Arabic original when no translation exists. */
+function poemView(p) {
+  const v = p[LANG] || p.ar;
+  return { v: v, dir: v === p.ar ? "rtl" : "ltr" };
+}
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function buildList(filter) {
+  const q = (filter || "").trim().toLowerCase();
+  listEl.innerHTML = "";
+  let shown = 0;
+  for (const p of POEMS) {
+    const hay = (p.ar.title + " " + (p.en ? p.en.title : "")).toLowerCase();
+    if (q && !hay.includes(q)) continue;
+    shown++;
+    const view = poemView(p);
+    const li  = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.id = p.id;
+    btn.innerHTML = '<span dir="' + view.dir + '">' + esc(view.v.title) + "</span>" +
+      (hasSong(p) ? '<span class="song-badge">' + T("songBadge") + "</span>" : "");
+    btn.addEventListener("click", () => selectPoem(p.id, true));
+    li.appendChild(btn);
+    listEl.appendChild(li);
+  }
+  emptyEl.hidden = shown > 0;
+  markActive();
+}
+
+let activeId = null;
+
+function markActive() {
+  for (const b of listEl.querySelectorAll("button")) {
+    b.setAttribute("aria-current", b.dataset.id === activeId ? "true" : "false");
+  }
+}
+
+function renderPoem(p) {
+  const view = poemView(p);
+  const v = view.v;
+  let delay = 0;
+  const stanzaHtml = v.stanzas.map((stanza) => {
+    const lines = stanza.map((line) => {
+      delay += 0.12;
+      return '<span class="line" style="--d:' + delay.toFixed(2) + 's">' + esc(line) + "</span>";
+    }).join("");
+    return '<div class="stanza">' + lines + "</div>";
+  }).join("");
+
+  const tagsHtml = v.tags.map((t) => '<span class="tag">' + esc(t) + "</span>").join("");
+
+  let songHtml = "";
+  if (hasSong(p)) {
+    let media = "";
+    if (p.youtube !== "") {
+      const inner = VALID_ID.test(p.youtube)
+        ? '<iframe src="https://www.youtube-nocookie.com/embed/' + p.youtube + '" ' +
+          'title="Song: ' + esc(v.title) + '" allow="accelerometer; autoplay; clipboard-write; ' +
+          'encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+        : '<div class="video-placeholder"><span class="big-note">&#9835;</span>' +
+          "<span>" + T("videoSoon") + "</span></div>";
+      const watch = VALID_ID.test(p.youtube)
+        ? '<a class="watch-link" href="https://www.youtube.com/watch?v=' + p.youtube +
+          '" target="_blank" rel="noopener">' + T("watch") + "</a>"
+        : "";
+      media = '<div class="video-shell">' + inner + "</div>" + watch;
+    }
+    if (p.audio) {
+      media += '<div class="audio-shell"><audio controls preload="none" src="' +
+        esc(p.audio) + '">Your browser cannot play this audio.</audio></div>';
+    }
+    const credit = '<p class="song-credit">' + T("credit") + "</p>";
+    songHtml =
+      '<hr class="rule">' +
+      '<p class="song-label"><span class="note-glyph">&#9834;</span> ' + T("theSong") + "</p>" +
+      media + credit;
+  }
+
+  const approved = (p.comments || []).map((c) =>
+    '<div class="letter"><p>' + esc(c.text) + "</p>" +
+    '<p class="letter-by">' + esc(c.name || "Anonymous") +
+    (c.date ? " &middot; " + esc(c.date) : "") + "</p></div>"
+  ).join("");
+
+  const lettersHtml =
+    '<hr class="rule">' +
+    '<section class="letters">' +
+    '<p class="song-label"><span class="note-glyph">&#9993;</span> ' + T("letters") + "</p>" +
+    '<div class="letters-list">' + approved + "</div>" +
+    '<form class="letter-form" novalidate>' +
+    '<input type="text" name="name" placeholder="' + T("namePh") + '" autocomplete="name">' +
+    '<textarea name="message" required placeholder="' + T("msgPh") + '"></textarea>' +
+    '<input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+    '<div class="letter-actions">' +
+    '<button class="btn-gold" type="submit">' + T("send") + "</button>" +
+    '<span class="letter-note">' + T("lettersNote") + "</span>" +
+    "</div>" +
+    '<p class="letter-status" hidden></p>' +
+    "</form></section>";
+
+  readingEl.innerHTML =
+    '<p class="poem-eyebrow">' + tagsHtml + "</p>" +
+    '<h2 class="poem-title" dir="' + view.dir + '">' + esc(v.title) + "</h2>" +
+    (v.dedication ? '<p class="dedication" dir="' + view.dir + '">' + esc(v.dedication) + "</p>" : "") +
+    '<div class="poem-body" dir="' + view.dir + '">' + stanzaHtml + "</div>" +
+    songHtml + lettersHtml;
+
+  const form = readingEl.querySelector(".letter-form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sendLetter(form, p);
+  });
+  if (COMMENTS_ENDPOINT) loadLetters(p, readingEl.querySelector(".letters-list"));
+}
+
+/* Fetch approved letters for this poem from the moderation backend */
+async function loadLetters(p, box) {
+  if (!box) return;
+  try {
+    const r = await fetch(COMMENTS_ENDPOINT + "?action=list&poem=" + encodeURIComponent(p.id));
+    const data = await r.json();
+    if (!data.ok || !Array.isArray(data.comments) || activeId !== p.id) return;
+    box.innerHTML = data.comments.map((c) => {
+      const d = c.date ? new Date(c.date) : null;
+      const ds = d && !isNaN(d)
+        ? d.toLocaleDateString(LANG === "ar" ? "ar" : "en", { year: "numeric", month: "long" })
+        : "";
+      return '<div class="letter"><p>' + esc(String(c.text || "")) + "</p>" +
+        '<p class="letter-by">' + esc(String(c.name || "")) +
+        (ds ? " &middot; " + esc(ds) : "") + "</p></div>";
+    }).join("");
+  } catch (err) { /* backend unreachable — keep whatever is shown */ }
+}
+
+async function sendLetter(form, poem) {
+  const poemTitle = poem.ar.title;
+  const status = form.querySelector(".letter-status");
+  const name = form.name.value.trim() || T("anon");
+  const message = form.message.value.trim();
+  if (form.botcheck.checked) return;          /* spam honeypot */
+  if (!message) {
+    status.hidden = false;
+    status.textContent = T("writeFirst");
+    return;
+  }
+  status.hidden = false;
+
+  const mailtoFallback = () => {
+    const subject = 'A letter about "' + poemTitle + '"';
+    const body = message + "\n\n— " + name + '\nOn the poem: "' + poemTitle + '"';
+    window.location.href = "mailto:" + CONTACT_EMAIL +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(body);
+    status.textContent = T("mailtoNote");
+  };
+
+  if (COMMENTS_ENDPOINT) {
+    status.textContent = T("sending");
+    try {
+      const r = await fetch(COMMENTS_ENDPOINT, {
+        method: "POST",
+        body: new URLSearchParams({
+          action: "submit", poem: poem.id, title: poemTitle,
+          name: name, message: message
+        })
+      });
+      const data = await r.json().catch(() => null);
+      if (!r.ok || !data || !data.ok) throw new Error("send failed");
+      form.reset();
+      status.textContent = T("sentPending");
+    } catch (err) {
+      mailtoFallback();
+    }
+    return;
+  }
+
+  if (WEB3FORMS_KEY) {
+    status.textContent = T("sending");
+    try {
+      const r = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: 'New reader letter on "' + poemTitle + '"',
+          from_name: name,
+          message: message + "\n\n— " + name + '\nPoem: "' + poemTitle + '"'
+        })
+      });
+      if (!r.ok) throw new Error("send failed");
+      form.reset();
+      status.textContent = T("sent");
+    } catch (err) {
+      mailtoFallback();
+    }
+  } else {
+    mailtoFallback();
+  }
+}
+
+function selectPoem(id, pushHash) {
+  const p = POEMS.find((x) => x.id === id) || POEMS[0];
+  activeId = p.id;
+  renderPoem(p);
+  markActive();
+  if (pushHash && history.replaceState) history.replaceState(null, "", "#" + p.id);
+}
+
+document.getElementById("copy-email").addEventListener("click", function () {
+  const email = CONTACT_EMAIL;
+  const done = () => {
+    this.textContent = T("copied");
+    setTimeout(() => { this.textContent = T("copy"); }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(email).then(done, done);
+  } else {
+    const ta = document.createElement("textarea");
+    ta.value = email;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    done();
+  }
+});
+
+searchEl.addEventListener("input", () => buildList(searchEl.value));
+
+/* Featured-work hero */
+function renderHero() {
+  const heroEl = document.getElementById("hero");
+  const rotating = FEATURED_ID === "rotate";
+  let p;
+  if (rotating) {
+    const day = Math.floor(Date.now() / 86400000);
+    p = POEMS[day % POEMS.length];
+  } else {
+    p = POEMS.find((x) => x.id === FEATURED_ID);
+  }
+  if (!p) { heroEl.hidden = true; return; }
+  const view = poemView(p);
+  const v = view.v;
+  const excerpt = v.stanzas[0].slice(0, 2).map(esc).join(" &middot; ");
+  heroEl.innerHTML =
+    '<span class="hero-mark" aria-hidden="true">&#10077;</span>' +
+    '<p class="hero-eyebrow">' +
+    T(hasSong(p) ? (rotating ? "dailySong" : "latestSong") : (rotating ? "dailyPoem" : "latestPoem")) + "</p>" +
+    '<h2 dir="' + view.dir + '">' + esc(v.title) + "</h2>" +
+    '<p class="hero-excerpt" dir="' + view.dir + '">' + excerpt + "&hellip;</p>" +
+    '<div class="hero-actions">' +
+    '<button class="btn-gold" type="button" id="hero-read">' + T("heroRead") + "</button>" +
+    (hasSong(p) ? '<button class="btn-ghost" type="button" id="hero-listen">' + T("heroListen") + "</button>" : "") +
+    "</div>";
+  heroEl.hidden = false;
+  const goTo = (scrollToSong) => {
+    selectPoem(p.id, true);
+    const target = scrollToSong ? readingEl.querySelector(".song-label") : readingEl;
+    (target || readingEl).scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  document.getElementById("hero-read").addEventListener("click", () => goTo(false));
+  const listenBtn = document.getElementById("hero-listen");
+  if (listenBtn) listenBtn.addEventListener("click", () => goTo(true));
+}
+
+/* Global language switch — flips direction, retranslates the whole UI */
+function setLang(lang) {
+  LANG = STR[lang] ? lang : "ar";
+  try { localStorage.setItem("diwan-lang", LANG); } catch (e) {}
+  document.documentElement.setAttribute("lang", LANG);
+  document.documentElement.setAttribute("dir", T("dir"));
+  document.querySelectorAll(".lang-toggle button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+
+  document.getElementById("site-name").textContent = T("name");
+  document.getElementById("site-role").textContent = T("role");
+  document.getElementById("contact-label").textContent = T("contactLabel");
+  document.getElementById("copy-email").textContent = T("copy");
+  document.getElementById("collection-title").textContent = T("collection");
+  searchEl.placeholder = T("searchPh");
+  emptyEl.textContent = T("empty");
+  document.getElementById("story-label").textContent = T("storyLabel");
+  document.getElementById("story-en").hidden = LANG !== "en";
+  document.getElementById("story-ar").hidden = LANG !== "ar";
+  document.getElementById("foot-name").textContent = T("name");
+  document.getElementById("foot-rights").textContent = T("footRights");
+  document.getElementById("foot-contact").textContent = T("footContact");
+
+  buildList(searchEl.value);
+  renderHero();
+  if (activeId) {
+    const p = POEMS.find((x) => x.id === activeId);
+    if (p) { renderPoem(p); markActive(); }
+  }
+}
+document.querySelectorAll(".lang-toggle button").forEach((btn) =>
+  btn.addEventListener("click", () => setLang(btn.dataset.lang)));
+
+/* Social icons (inline SVG — no external requests) */
+const SOCIAL_ICONS = {
+  YouTube: '<path d="M21.6 7.2a2.8 2.8 0 0 0-2-2C17.9 4.8 12 4.8 12 4.8s-5.9 0-7.6.4a2.8 2.8 0 0 0-2 2A29 29 0 0 0 2 12a29 29 0 0 0 .4 4.8 2.8 2.8 0 0 0 2 2c1.7.4 7.6.4 7.6.4s5.9 0 7.6-.4a2.8 2.8 0 0 0 2-2A29 29 0 0 0 22 12a29 29 0 0 0-.4-4.8zM9.8 15.3V8.7L15.4 12z"/>',
+  Instagram: '<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.2" cy="6.8" r="1.3"/>',
+  Facebook: '<path d="M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.6-1.5h1.3V4.9c-.6-.1-1.4-.2-2.3-.2-2.3 0-3.8 1.4-3.8 3.9V11H8v3h2.3v7z"/>',
+  LinkedIn: '<path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/>',
+  TikTok: '<path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>',
+  X: '<path d="M17.5 3h3l-6.6 7.5L21.7 21h-6l-4.1-5.4L6.9 21h-3l7-8L2.6 3h6.2l3.7 4.9L17.5 3zm-1 16h1.7L7.7 4.7H5.9L16.5 19z"/>'
+};
+(function renderSocials() {
+  const wrap = document.getElementById("socials");
+  const links = SOCIALS.filter((s) => s.url);
+  if (!links.length) { wrap.hidden = true; return; }
+  wrap.innerHTML = links.map((s) =>
+    '<a href="' + esc(s.url) + '" target="_blank" rel="noopener" aria-label="' + esc(s.name) + '">' +
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    (SOCIAL_ICONS[s.name] || "") + "</svg></a>"
+  ).join("");
+})();
+
+const fromHash = location.hash.replace("#", "");
+activeId = POEMS.some((p) => p.id === fromHash) ? fromHash : POEMS[0].id;
+setLang(LANG);   /* renders the list, hero, poem, and all UI text */
+
+/* ==============================================================
+   BACKGROUND ANIMATION — golden motes and musical notes drifting
+   upward like sparks in stage light, with a soft parallax that
+   follows the visitor's mouse. Color and brightness come from the
+   theme tokens (--mote-rgb / --mote-alpha); disabled entirely
+   under prefers-reduced-motion.
+   ============================================================== */
+(function stageMotes() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  /* Touch devices (iPhone/iPad): the canvas is display:none and the
+     sky is plain CSS on the body — skip the starfield entirely. */
+  if (window.matchMedia("(pointer: coarse)").matches) return;
+
+  const canvas = document.getElementById("stage-motes");
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, dpr = 1;
+  let moteRGB = "217, 164, 65";
+  let moteAlpha = 1;
+
+  function readTheme() {
+    const cs = getComputedStyle(document.documentElement);
+    moteRGB = (cs.getPropertyValue("--mote-rgb").trim() || moteRGB);
+    moteAlpha = parseFloat(cs.getPropertyValue("--mote-alpha")) || 1;
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    readTheme();
+  }
+  resize();
+  /* Debounced — reallocating the canvas buffer mid-rotation triggers
+     iOS Safari layer loss; resize once, after the rotation settles. */
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 300);
+  });
+  window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", readTheme);
+  new MutationObserver(readTheme)
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  const N_STARS = Math.round(Math.min(110, W / 12));  /* density scales with width */
+  const N_SPARKLES = 7;                               /* larger four-point stars */
+  const parts = [];
+
+  function spawn(isSparkle, anywhere) {
+    const depth = 0.3 + Math.random() * 0.7;          /* 0 = far, 1 = near */
+    return {
+      sparkle: isSparkle,
+      x: anywhere ? Math.random() * W : W + 25,
+      y: Math.random() * H,
+      depth,
+      r: isSparkle ? 4.5 + depth * 7 : 0.5 + depth * 1.4,
+      vx: -(2 + depth * 6),                           /* slow drift, like the sky turning */
+      angle: Math.random() * Math.PI,
+      spin: (Math.random() - 0.5) * 0.3,
+      baseA: (isSparkle ? 0.35 : 0.3) + depth * 0.5,
+      twinkleFreq: 0.3 + Math.random() * 1.2,
+      phase: Math.random() * Math.PI * 2
+    };
+  }
+  for (let i = 0; i < N_STARS; i++) parts.push(spawn(false, true));
+  for (let i = 0; i < N_SPARKLES; i++) parts.push(spawn(true, true));
+
+  function drawSparkle(x, y, s, angle, color) {
+    const k = s * 0.28;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -s); ctx.lineTo(k, -k); ctx.lineTo(s, 0); ctx.lineTo(k, k);
+    ctx.lineTo(0, s); ctx.lineTo(-k, k); ctx.lineTo(-s, 0); ctx.lineTo(-k, -k);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* Gentle parallax toward the mouse */
+  let mx = 0, my = 0, tx = 0, ty = 0;
+  window.addEventListener("pointermove", (e) => {
+    tx = (e.clientX / W - 0.5) * 2;
+    ty = (e.clientY / H - 0.5) * 2;
+  });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    mx += (tx - mx) * 0.03;
+    my += (ty - my) * 0.03;
+    const t = now / 1000;
+
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < parts.length; i++) {
+      let p = parts[i];
+      p.x += p.vx * dt;
+      p.angle += p.spin * dt;
+      if (p.x < -30) { parts[i] = p = spawn(p.sparkle, false); }
+
+      const px = p.x - mx * p.depth * 20;
+      const py = p.y - my * p.depth * 12;
+      const twinkle = 0.55 + 0.45 * Math.sin(t * p.twinkleFreq * Math.PI * 2 + p.phase);
+      const a = p.baseA * twinkle * moteAlpha;
+      const color = "rgba(" + moteRGB + ", " + a.toFixed(3) + ")";
+
+      if (p.sparkle) {
+        drawSparkle(px, py, p.r * (0.85 + 0.15 * twinkle), p.angle, color);
+      } else {
+        ctx.beginPath();
+        ctx.arc(px, py, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        if (p.depth > 0.82) {               /* nearest stars get a soft halo */
+          ctx.beginPath();
+          ctx.arc(px, py, p.r * 3.4, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(" + moteRGB + ", " + (a * 0.12).toFixed(3) + ")";
+          ctx.fill();
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
