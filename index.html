@@ -1322,7 +1322,7 @@ const FEATURED_ID = "janah-alshawq";
    in the repo for the script + setup steps). With it set, letters are
    stored as PENDING, you get an email with one-click approve/reject
    links, and approved letters appear automatically under their poem. */
-const COMMENTS_ENDPOINT = "";
+const COMMENTS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwdQ18uipLLl5T9uXKfpvNeidvXKuoNjliYKZOR_5NC67tKHfZetohyThHb_Nt5S44Smg/exec";
 
 /* Fallbacks used only while COMMENTS_ENDPOINT is empty: Web3Forms key
    (email-only delivery), else the reader's own email app. */
@@ -1600,7 +1600,8 @@ async function sendLetter(form, poem) {
           name: name, message: message
         })
       });
-      if (!r.ok) throw new Error("send failed");
+      const data = await r.json().catch(() => null);
+      if (!r.ok || !data || !data.ok) throw new Error("send failed");
       form.reset();
       status.textContent = T("sentPending");
     } catch (err) {
