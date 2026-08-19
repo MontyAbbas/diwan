@@ -99,7 +99,9 @@
     letter-spacing: 0;
   }
 
-  /* Ambient stage light, drifting slowly behind everything */
+  /* Ambient sky glow behind everything (static — the starfield canvas
+     carries the motion; animating this fixed layer triggers iOS Safari
+     compositing bugs that blank the page content) */
   .stage-light {
     position: fixed;
     inset: 0;
@@ -108,11 +110,6 @@
     background:
       radial-gradient(42rem 30rem at 78% 12%, var(--bg-glow-1), transparent 65%),
       radial-gradient(38rem 34rem at 12% 85%, var(--bg-glow-2), transparent 65%);
-    animation: drift 26s ease-in-out infinite alternate;
-  }
-  @keyframes drift {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to   { transform: translate3d(-2.5rem, 1.5rem, 0) scale(1.06); }
   }
   /* Drifting motes & musical notes, drawn on canvas */
   .stage-motes {
@@ -122,7 +119,6 @@
     pointer-events: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    .stage-light { animation: none; }
     .stage-motes { display: none; }
     * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
   }
@@ -130,6 +126,9 @@
   .frame {
     position: relative;
     z-index: 1;
+    /* own GPU layer — keeps content composited above the fixed sky
+       layers through iOS rotation */
+    transform: translateZ(0);
     max-width: 76rem;
     margin: 0 auto;
     padding: 1.5rem 1.5rem 4rem;
@@ -1947,7 +1946,13 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
     readTheme();
   }
   resize();
-  window.addEventListener("resize", resize);
+  /* Debounced — reallocating the canvas buffer mid-rotation triggers
+     iOS Safari layer loss; resize once, after the rotation settles. */
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 250);
+  });
   window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", readTheme);
   new MutationObserver(readTheme)
     .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
