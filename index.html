@@ -1317,11 +1317,15 @@ const POEMS = [
 /* The poem spotlighted in the hero — set to the id of your newest work */
 const FEATURED_ID = "janah-alshawq";
 
-/* Reader letters are DELIVERED TO YOUR EMAIL, not posted publicly.
-   For reliable delivery, create a free access key at https://web3forms.com
-   (enter montasir.abbas@gmail.com — the key arrives by email) and paste it
-   here. Until then, the form falls back to opening the reader's own email
-   app addressed to you. */
+/* READER LETTERS — live moderated comments.
+   Paste your Google Apps Script web-app URL here (see comments-backend.gs
+   in the repo for the script + setup steps). With it set, letters are
+   stored as PENDING, you get an email with one-click approve/reject
+   links, and approved letters appear automatically under their poem. */
+const COMMENTS_ENDPOINT = "";
+
+/* Fallbacks used only while COMMENTS_ENDPOINT is empty: Web3Forms key
+   (email-only delivery), else the reader's own email app. */
 const WEB3FORMS_KEY = "";
 const CONTACT_EMAIL = "montasir.abbas@gmail.com";
 
@@ -1355,6 +1359,7 @@ const STR = {
     sending: "جارٍ الإرسال…",
     sent: "رسالتك في طريقها إلى الشاعر. شكرًا لك.",
     mailtoNote: "سيفتح تطبيق البريد لديك الآن — أو راسلني مباشرة على " + CONTACT_EMAIL + ".",
+    sentPending: "وصلت رسالتك، وستظهر هنا بعد موافقة الشاعر. شكرًا لك.",
     anon: "زائر",
     storyLabel: "حكايتي",
     footRights: "جميع القصائد والأغاني من تأليف وتلحين الشاعر",
@@ -1385,6 +1390,7 @@ const STR = {
     sending: "Sending…",
     sent: "Your letter is on its way to the poet. Thank you.",
     mailtoNote: "Your email app should open now — or write directly to " + CONTACT_EMAIL + ".",
+    sentPending: "Your letter has been received — it will appear here once the poet approves it. Thank you.",
     anon: "Anonymous",
     storyLabel: "My Story",
     footRights: "All poems and songs are written and composed by the author",
@@ -1516,7 +1522,7 @@ function renderPoem(p) {
     '<hr class="rule">' +
     '<section class="letters">' +
     '<p class="song-label"><span class="note-glyph">&#9993;</span> ' + T("letters") + "</p>" +
-    approved +
+    '<div class="letters-list">' + approved + "</div>" +
     '<form class="letter-form" novalidate>' +
     '<input type="text" name="name" placeholder="' + T("namePh") + '" autocomplete="name">' +
     '<textarea name="message" required placeholder="' + T("msgPh") + '"></textarea>' +
@@ -1538,11 +1544,32 @@ function renderPoem(p) {
   const form = readingEl.querySelector(".letter-form");
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    sendLetter(form, p.ar.title);
+    sendLetter(form, p);
   });
+  if (COMMENTS_ENDPOINT) loadLetters(p, readingEl.querySelector(".letters-list"));
 }
 
-async function sendLetter(form, poemTitle) {
+/* Fetch approved letters for this poem from the moderation backend */
+async function loadLetters(p, box) {
+  if (!box) return;
+  try {
+    const r = await fetch(COMMENTS_ENDPOINT + "?action=list&poem=" + encodeURIComponent(p.id));
+    const data = await r.json();
+    if (!data.ok || !Array.isArray(data.comments) || activeId !== p.id) return;
+    box.innerHTML = data.comments.map((c) => {
+      const d = c.date ? new Date(c.date) : null;
+      const ds = d && !isNaN(d)
+        ? d.toLocaleDateString(LANG === "ar" ? "ar" : "en", { year: "numeric", month: "long" })
+        : "";
+      return '<div class="letter"><p>' + esc(String(c.text || "")) + "</p>" +
+        '<p class="letter-by">' + esc(String(c.name || "")) +
+        (ds ? " &middot; " + esc(ds) : "") + "</p></div>";
+    }).join("");
+  } catch (err) { /* backend unreachable — keep whatever is shown */ }
+}
+
+async function sendLetter(form, poem) {
+  const poemTitle = poem.ar.title;
   const status = form.querySelector(".letter-status");
   const name = form.name.value.trim() || T("anon");
   const message = form.message.value.trim();
@@ -1562,6 +1589,25 @@ async function sendLetter(form, poemTitle) {
       "&body=" + encodeURIComponent(body);
     status.textContent = T("mailtoNote");
   };
+
+  if (COMMENTS_ENDPOINT) {
+    status.textContent = T("sending");
+    try {
+      const r = await fetch(COMMENTS_ENDPOINT, {
+        method: "POST",
+        body: new URLSearchParams({
+          action: "submit", poem: poem.id, title: poemTitle,
+          name: name, message: message
+        })
+      });
+      if (!r.ok) throw new Error("send failed");
+      form.reset();
+      status.textContent = T("sentPending");
+    } catch (err) {
+      mailtoFallback();
+    }
+    return;
+  }
 
   if (WEB3FORMS_KEY) {
     status.textContent = T("sending");
