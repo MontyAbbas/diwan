@@ -755,6 +755,16 @@
     }
     nav.collection { position: static; }
     .frame { transform: none; }
+    /* No fixed layers at all on touch devices — the sky lives on the
+       body itself. iOS Safari blanks page content when fixed layers
+       are re-composited on rotation. */
+    .stage-light, .stage-motes { display: none; }
+    body {
+      background:
+        radial-gradient(42rem 30rem at 78% 12%, var(--bg-glow-1), transparent 65%),
+        radial-gradient(38rem 34rem at 12% 85%, var(--bg-glow-2), transparent 65%),
+        var(--bg);
+    }
   }
 
   /* ============================================================
@@ -1938,10 +1948,9 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
 (function stageMotes() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  /* Touch devices (iPhone/iPad): draw the stars ONCE, statically.
-     The per-frame animation + rotation-time canvas reallocation
-     triggers iOS Safari layer loss that blanks the page content. */
-  const STATIC_MODE = window.matchMedia("(pointer: coarse)").matches;
+  /* Touch devices (iPhone/iPad): the canvas is display:none and the
+     sky is plain CSS on the body — skip the starfield entirely. */
+  if (window.matchMedia("(pointer: coarse)").matches) return;
 
   const canvas = document.getElementById("stage-motes");
   const ctx = canvas.getContext("2d");
@@ -1970,7 +1979,7 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
   let resizeTimer = null;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { resize(); if (STATIC_MODE) drawOnce(); }, 300);
+    resizeTimer = setTimeout(resize, 300);
   });
   window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", readTheme);
   new MutationObserver(readTheme)
@@ -2011,24 +2020,6 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
     ctx.fillStyle = color;
     ctx.fill();
     ctx.restore();
-  }
-
-  /* Static one-shot starfield (mobile) */
-  function drawOnce() {
-    ctx.clearRect(0, 0, W, H);
-    for (let i = 0; i < parts.length; i++) {
-      const p = parts[i];
-      const a = p.baseA * 0.8 * moteAlpha;
-      const color = "rgba(" + moteRGB + ", " + a.toFixed(3) + ")";
-      if (p.sparkle) {
-        drawSparkle(p.x % (W + 50), p.y % (H + 1), p.r, p.angle, color);
-      } else {
-        ctx.beginPath();
-        ctx.arc(p.x % (W + 50), p.y % (H + 1), p.r, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-      }
-    }
   }
 
   /* Gentle parallax toward the mouse */
@@ -2076,11 +2067,7 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
     }
     requestAnimationFrame(frame);
   }
-  if (STATIC_MODE) {
-    drawOnce();
-  } else {
-    requestAnimationFrame(frame);
-  }
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
