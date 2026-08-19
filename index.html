@@ -30,7 +30,7 @@
     --line:        rgba(29, 51, 73, 0.16);
     --shadow:      0 18px 40px rgba(29, 51, 73, 0.16);
     --mote-rgb:    176, 127, 22;   /* star color (r,g,b) */
-    --mote-alpha:  0.65;           /* star brightness multiplier */
+    --mote-alpha:  0.85;           /* star brightness multiplier */
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -1975,8 +1975,8 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
   new MutationObserver(readTheme)
     .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-  const N_STARS = Math.round(Math.min(110, W / 12));  /* density scales with width */
-  const N_SPARKLES = 7;                               /* larger four-point stars */
+  const N_STARS = Math.round(Math.min(90, W / 15));   /* small twinkling points */
+  const N_SPARKLES = Math.round(Math.min(28, W / 46)); /* four-point stars — the real look */
   const parts = [];
 
   function spawn(isSparkle, anywhere) {
@@ -1986,11 +1986,11 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
       x: anywhere ? Math.random() * W : W + 25,
       y: Math.random() * H,
       depth,
-      r: isSparkle ? 4.5 + depth * 7 : 0.5 + depth * 1.4,
+      r: isSparkle ? 3 + Math.random() * 4 + depth * 6 : 0.5 + depth * 1.4,
       vx: -(2 + depth * 6),                           /* slow drift, like the sky turning */
       angle: Math.random() * Math.PI,
       spin: (Math.random() - 0.5) * 0.3,
-      baseA: (isSparkle ? 0.35 : 0.3) + depth * 0.5,
+      baseA: (isSparkle ? 0.45 : 0.3) + depth * 0.5,
       twinkleFreq: 0.3 + Math.random() * 1.2,
       phase: Math.random() * Math.PI * 2
     };
