@@ -744,6 +744,20 @@
   footer.colophon a { color: var(--accent); text-decoration: none; }
 
   /* ============================================================
+     TOUCH DEVICES — disable desktop-only effects that trigger
+     iOS Safari compositing bugs (content blanking on rotation):
+     sticky positioning, backdrop blur, forced GPU layer.
+     ============================================================ */
+  @media (pointer: coarse) {
+    header.masthead {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    nav.collection { position: static; }
+    .frame { transform: none; }
+  }
+
+  /* ============================================================
      RESPONSIVE — collection collapses above the reading pane
      ============================================================ */
   @media (max-width: 780px) {
