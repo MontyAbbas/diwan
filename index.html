@@ -144,6 +144,7 @@
     border: 1px solid var(--panel-edge);
     border-radius: 1rem;
     background: color-mix(in srgb, var(--panel) 82%, transparent);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     box-shadow: var(--shadow);
   }
@@ -858,6 +859,15 @@
 </div>
 
 <script>
+/* Temporary diagnostic: surface any runtime error visibly (helps
+   debug mobile browsers with no console). Remove once stable. */
+window.onerror = function (msg, src, line, col) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#b00020;color:#fff;font:13px monospace;padding:8px;direction:ltr;text-align:left";
+  d.textContent = "JS error: " + msg + " @ " + line + ":" + col;
+  document.body.appendChild(d);
+};
+
 /* ==============================================================
    YOUR POEMS LIVE HERE — edit this array and nothing else.
    Each poem: {
