@@ -1924,6 +1924,11 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
 (function stageMotes() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+  /* Touch devices (iPhone/iPad): draw the stars ONCE, statically.
+     The per-frame animation + rotation-time canvas reallocation
+     triggers iOS Safari layer loss that blanks the page content. */
+  const STATIC_MODE = window.matchMedia("(pointer: coarse)").matches;
+
   const canvas = document.getElementById("stage-motes");
   const ctx = canvas.getContext("2d");
   let W = 0, H = 0, dpr = 1;
@@ -1951,7 +1956,7 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
   let resizeTimer = null;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(resize, 250);
+    resizeTimer = setTimeout(() => { resize(); if (STATIC_MODE) drawOnce(); }, 300);
   });
   window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", readTheme);
   new MutationObserver(readTheme)
@@ -1992,6 +1997,24 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
     ctx.fillStyle = color;
     ctx.fill();
     ctx.restore();
+  }
+
+  /* Static one-shot starfield (mobile) */
+  function drawOnce() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      const a = p.baseA * 0.8 * moteAlpha;
+      const color = "rgba(" + moteRGB + ", " + a.toFixed(3) + ")";
+      if (p.sparkle) {
+        drawSparkle(p.x % (W + 50), p.y % (H + 1), p.r, p.angle, color);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x % (W + 50), p.y % (H + 1), p.r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    }
   }
 
   /* Gentle parallax toward the mouse */
@@ -2039,7 +2062,11 @@ setLang(LANG);   /* renders the list, hero, poem, and all UI text */
     }
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  if (STATIC_MODE) {
+    drawOnce();
+  } else {
+    requestAnimationFrame(frame);
+  }
 })();
 </script>
 </body>
