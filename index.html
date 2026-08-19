@@ -601,11 +601,15 @@
     outline-offset: 1px;
   }
   .letter-form .hp {
+    /* visually hidden IN PLACE — never position offscreen: a
+       left:-9999px element in an RTL page creates a huge layout
+       overhang that blanks iOS Safari on rotation */
     position: absolute;
-    left: -9999px;
     width: 1px;
     height: 1px;
     opacity: 0;
+    pointer-events: none;
+    clip-path: inset(50%);
   }
   .letter-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
   .letter-note {
