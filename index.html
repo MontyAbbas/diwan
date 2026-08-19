@@ -1457,8 +1457,9 @@ const POEMS = [
   }
 ];
 
-/* The poem spotlighted in the hero — set to the id of your newest work */
-const FEATURED_ID = "janah-alshawq";
+/* The hero spotlight: "rotate" features a different work each day,
+   or set a poem id (e.g. "ya-wardatan") to pin one permanently. */
+const FEATURED_ID = "rotate";
 
 /* READER LETTERS — live moderated comments.
    Paste your Google Apps Script web-app URL here (see comments-backend.gs
@@ -1488,6 +1489,7 @@ const STR = {
     empty: "لا توجد عناوين مطابقة.",
     songBadge: "&#9834; أغنية",
     latestSong: "أحدث أغنية", latestPoem: "أحدث قصيدة",
+    dailySong: "أغنية اليوم", dailyPoem: "قصيدة اليوم",
     heroRead: "اقرأ القصيدة", heroListen: "&#9834; استمع إلى الأغنية",
     theSong: "الأغنية",
     videoSoon: "الأغنية مسجَّلة &mdash; الفيديو قريبًا.",
@@ -1519,6 +1521,7 @@ const STR = {
     empty: "No titles match.",
     songBadge: "&#9834; song",
     latestSong: "The Latest Song", latestPoem: "The Latest Poem",
+    dailySong: "Today's Song", dailyPoem: "Today's Poem",
     heroRead: "Read the poem", heroListen: "&#9834; Hear the song",
     theSong: "The Song",
     videoSoon: "Song recorded &mdash; video coming soon.<br>(Paste the YouTube video ID into the POEMS array to embed it here.)",
@@ -1809,14 +1812,22 @@ searchEl.addEventListener("input", () => buildList(searchEl.value));
 /* Featured-work hero */
 function renderHero() {
   const heroEl = document.getElementById("hero");
-  const p = POEMS.find((x) => x.id === FEATURED_ID);
+  const rotating = FEATURED_ID === "rotate";
+  let p;
+  if (rotating) {
+    const day = Math.floor(Date.now() / 86400000);
+    p = POEMS[day % POEMS.length];
+  } else {
+    p = POEMS.find((x) => x.id === FEATURED_ID);
+  }
   if (!p) { heroEl.hidden = true; return; }
   const view = poemView(p);
   const v = view.v;
   const excerpt = v.stanzas[0].slice(0, 2).map(esc).join(" &middot; ");
   heroEl.innerHTML =
     '<span class="hero-mark" aria-hidden="true">&#10077;</span>' +
-    '<p class="hero-eyebrow">' + T(hasSong(p) ? "latestSong" : "latestPoem") + "</p>" +
+    '<p class="hero-eyebrow">' +
+    T(hasSong(p) ? (rotating ? "dailySong" : "latestSong") : (rotating ? "dailyPoem" : "latestPoem")) + "</p>" +
     '<h2 dir="' + view.dir + '">' + esc(v.title) + "</h2>" +
     '<p class="hero-excerpt" dir="' + view.dir + '">' + excerpt + "&hellip;</p>" +
     '<div class="hero-actions">' +
