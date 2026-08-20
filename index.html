@@ -4791,8 +4791,8 @@ const STR = {
     contactLabel: "للأمسيات الشعرية والتراخيص والتعاون الفنّي",
     copy: "نسخ", copied: "نُسخ!",
     collection: "الديوان",
-    searchPh: "ابحث في العناوين…",
-    empty: "لا توجد عناوين مطابقة.",
+    searchPh: "ابحث بأي كلمة في القصائد…",
+    empty: "لا توجد قصائد مطابقة.",
     songBadge: "&#9834; أغنية",
     latestSong: "الأغنية المختارة", latestPoem: "القصيدة المختارة",
     dailySong: "أغنية اليوم", dailyPoem: "قصيدة اليوم",
@@ -4823,8 +4823,8 @@ const STR = {
     contactLabel: "For readings, licensing & collaboration",
     copy: "Copy", copied: "Copied!",
     collection: "The Collection",
-    searchPh: "Search titles…",
-    empty: "No titles match.",
+    searchPh: "Search any word in the poems…",
+    empty: "No poems match.",
     songBadge: "&#9834; song",
     latestSong: "Featured Song", latestPoem: "Featured Poem",
     dailySong: "Today's Song", dailyPoem: "Today's Poem",
@@ -4892,13 +4892,41 @@ function esc(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/* Normalize Arabic for search: strip diacritics/tatweel, unify
+   hamza and taa-marbuta forms — so plain typing matches vocalized text */
+function normalizeArabic(s) {
+  return String(s)
+    .replace(/[ً-ْٰـ]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .toLowerCase();
+}
+
+/* Full-text haystack per poem (title + dedication + tags + every line,
+   both languages), built once and cached */
+const HAYSTACKS = {};
+function poemHaystack(p) {
+  if (!HAYSTACKS[p.id]) {
+    const parts = [];
+    for (const v of [p.ar, p.en]) {
+      if (!v) continue;
+      parts.push(v.title, v.dedication || "", (v.tags || []).join(" "));
+      for (const st of v.stanzas) parts.push(st.join(" "));
+    }
+    HAYSTACKS[p.id] = normalizeArabic(parts.join(" "));
+  }
+  return HAYSTACKS[p.id];
+}
+
 function buildList(filter) {
-  const q = (filter || "").trim().toLowerCase();
+  const tokens = (filter || "").trim()
+    ? normalizeArabic(filter.trim()).split(/\s+/).filter(Boolean)
+    : [];
   listEl.innerHTML = "";
   let shown = 0;
   for (const p of POEMS) {
-    const hay = (p.ar.title + " " + (p.en ? p.en.title : "")).toLowerCase();
-    if (q && !hay.includes(q)) continue;
+    if (tokens.length && !tokens.every((t) => poemHaystack(p).includes(t))) continue;
     shown++;
     const view = poemView(p);
     const li  = document.createElement("li");
