@@ -4903,30 +4903,52 @@ function normalizeArabic(s) {
     .toLowerCase();
 }
 
-/* Full-text haystack per poem (title + dedication + tags + every line,
+/* A word plus its forms without common Arabic particles, so that
+   searching دموع matches الدموع / ودموع — but never letters buried
+   inside an unrelated word */
+function wordVariants(w) {
+  const out = [w];
+  let x = w;
+  if (/^[وف]./.test(x) && x.length > 2) { x = x.slice(1); out.push(x); }
+  if (/^[بلكس]./.test(x) && x.length > 2) { x = x.slice(1); out.push(x); }
+  if ((x.startsWith("ال") || x.startsWith("لل")) && x.length > 3) out.push(x.slice(2));
+  return out;
+}
+
+/* Whole-word index per poem (title + dedication + tags + every line,
    both languages), built once and cached */
-const HAYSTACKS = {};
-function poemHaystack(p) {
-  if (!HAYSTACKS[p.id]) {
+const WORDSETS = {};
+function poemWords(p) {
+  if (!WORDSETS[p.id]) {
     const parts = [];
     for (const v of [p.ar, p.en]) {
       if (!v) continue;
       parts.push(v.title, v.dedication || "", (v.tags || []).join(" "));
       for (const st of v.stanzas) parts.push(st.join(" "));
     }
-    HAYSTACKS[p.id] = normalizeArabic(parts.join(" "));
+    const set = new Set();
+    normalizeArabic(parts.join(" "))
+      .split(/[^a-z0-9ء-ي]+/)
+      .forEach((w) => { if (w) wordVariants(w).forEach((v) => set.add(v)); });
+    WORDSETS[p.id] = set;
   }
-  return HAYSTACKS[p.id];
+  return WORDSETS[p.id];
+}
+
+function tokenMatches(set, t) {
+  const vars = wordVariants(t);
+  for (let i = 0; i < vars.length; i++) if (set.has(vars[i])) return true;
+  return false;
 }
 
 function buildList(filter) {
   const tokens = (filter || "").trim()
-    ? normalizeArabic(filter.trim()).split(/\s+/).filter(Boolean)
+    ? normalizeArabic(filter.trim()).split(/[^a-z0-9ء-ي]+/).filter(Boolean)
     : [];
   listEl.innerHTML = "";
   let shown = 0;
   for (const p of POEMS) {
-    if (tokens.length && !tokens.every((t) => poemHaystack(p).includes(t))) continue;
+    if (tokens.length && !tokens.every((t) => tokenMatches(poemWords(p), t))) continue;
     shown++;
     const view = poemView(p);
     const li  = document.createElement("li");
