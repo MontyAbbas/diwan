@@ -313,6 +313,9 @@
     transform: translateY(-2px);
   }
 
+  /* "Back to the collection" — shown only when the layout is stacked (mobile) */
+  .back-wrap { display: none; }
+
   /* ============================================================
      TWO-PANE LAYOUT — collection (left) + reading pane (right)
      ============================================================ */
@@ -760,6 +763,8 @@
     .diwan { grid-template-columns: 1fr; }
     nav.collection { position: static; }
     .contact-label { text-align: left; }
+    .reading { scroll-margin-top: 0.75rem; }
+    .back-wrap { display: flex; justify-content: center; margin-top: 2.25rem; }
   }
 </style>
 
@@ -4929,6 +4934,7 @@ const STR = {
     mailtoNote: "سيفتح تطبيق البريد لديك الآن — أو راسلني مباشرة على " + CONTACT_EMAIL + ".",
     sentPending: "وصلت رسالتك، وستظهر هنا بعد موافقة الشاعر. شكرًا لك.",
     anon: "زائر",
+    backToList: "&#8593; العودة إلى الديوان",
     storyLabel: "حكايتي",
     footRights: "جميع القصائد والأغاني من تأليف وتلحين الشاعر",
     footContact: "راسلني"
@@ -4961,6 +4967,7 @@ const STR = {
     mailtoNote: "Your email app should open now — or write directly to " + CONTACT_EMAIL + ".",
     sentPending: "Your letter has been received — it will appear here once the poet approves it. Thank you.",
     anon: "Anonymous",
+    backToList: "&#8593; Back to the collection",
     storyLabel: "My Story",
     footRights: "All poems and songs are written and composed by the author",
     footContact: "Get in touch"
@@ -5074,7 +5081,7 @@ function buildList(filter) {
     btn.dataset.id = p.id;
     btn.innerHTML = '<span dir="' + view.dir + '">' + esc(view.v.title) + "</span>" +
       (hasSong(p) ? '<span class="song-badge">' + T("songBadge") + "</span>" : "");
-    btn.addEventListener("click", () => selectPoem(p.id, true));
+    btn.addEventListener("click", () => selectPoem(p.id, true, true));
     li.appendChild(btn);
     listEl.appendChild(li);
   }
@@ -5156,12 +5163,21 @@ function renderPoem(p) {
     '<p class="letter-status" hidden></p>' +
     "</form></section>";
 
+  const backHtml =
+    '<div class="back-wrap"><button class="btn-ghost back-to-list" type="button">' +
+    T("backToList") + "</button></div>";
+
   readingEl.innerHTML =
     '<p class="poem-eyebrow">' + tagsHtml + "</p>" +
     '<h2 class="poem-title" dir="' + view.dir + '">' + esc(v.title) + "</h2>" +
     (v.dedication ? '<p class="dedication" dir="' + view.dir + '">' + esc(v.dedication) + "</p>" : "") +
     '<div class="poem-body" dir="' + view.dir + '">' + stanzaHtml + "</div>" +
-    songHtml + lettersHtml;
+    songHtml + backHtml + lettersHtml;
+
+  readingEl.querySelector(".back-to-list").addEventListener("click", () => {
+    document.querySelector("nav.collection")
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   const form = readingEl.querySelector(".letter-form");
   form.addEventListener("submit", (e) => {
@@ -5256,12 +5272,15 @@ async function sendLetter(form, poem) {
   }
 }
 
-function selectPoem(id, pushHash) {
+function selectPoem(id, pushHash, scrollToPoem) {
   const p = POEMS.find((x) => x.id === id) || POEMS[0];
   activeId = p.id;
   renderPoem(p);
   markActive();
   if (pushHash && history.replaceState) history.replaceState(null, "", "#" + p.id);
+  if (scrollToPoem) {
+    readingEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 document.getElementById("copy-email").addEventListener("click", function () {
