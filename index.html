@@ -363,6 +363,15 @@
   }
   ul.poem-list { list-style: none; }
   ul.poem-list li { border-top: 1px solid var(--line); }
+  ul.poem-list li.group-head {
+    padding: 1rem 1.25rem 0.35rem;
+    font-family: "Karla", "Amiri", sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  ul.poem-list li.group-head + li { border-top: none; }
   ul.poem-list button {
     display: flex;
     align-items: baseline;
@@ -894,6 +903,13 @@
 <script>
 /* ==============================================================
    YOUR POEMS LIVE HERE — edit this array and nothing else.
+
+   ORDER: add new poems at the TOP of this array. The sidebar does
+   NOT show array order — it groups poems by theme (first tag; the
+   "أغنية" tag wins and puts a poem under Songs), in the order set
+   by GROUP_ORDER below the array. Within a group, poems follow
+   their array order, so newest-at-top keeps every group newest-first.
+
    Each poem: {
      id,
      youtube: 11-char video ID, or "" if no song yet,
@@ -5394,6 +5410,33 @@ const POEMS = [
    or "rotate" to feature a different work each day. */
 const FEATURED_ID = "qul-liljamila";
 
+/* SIDEBAR ORDER — the list is grouped by theme, not by array position.
+   A poem tagged "أغنية" goes in the Songs group; otherwise its FIRST
+   tag decides the group. Groups appear in the order below (unknown
+   tags fall to the end); within a group, poems keep their POEMS-array
+   order — new poems go at the TOP of POEMS so they appear first. */
+const GROUP_ORDER = [
+  { tag: "أغنية",  en: "Songs" },
+  { tag: "غزل",    en: "Ghazal" },
+  { tag: "حب",     en: "Love" },
+  { tag: "شوق",    en: "Longing" },
+  { tag: "حنين",   en: "Nostalgia" },
+  { tag: "عتاب",   en: "Reproach" },
+  { tag: "وجدان",  en: "Reveries" },
+  { tag: "تأمل",   en: "Contemplation" },
+  { tag: "ذكريات", en: "Memories" },
+  { tag: "رمزية",  en: "Symbolism" },
+  { tag: "أمي",    en: "My Mother" },
+  { tag: "أبي",    en: "My Father" },
+  { tag: "رثاء",   en: "Elegies" },
+  { tag: "الوطن",  en: "Homeland" },
+  { tag: "غربة",   en: "Exile" },
+  { tag: "ثورة",   en: "Revolution" },
+  { tag: "معارضة", en: "Dialogues" },
+  { tag: "صداقة",  en: "Friendship" },
+  { tag: "ونس",    en: "Companionship" }
+];
+
 /* READER LETTERS — live moderated comments.
    Paste your Google Apps Script web-app URL here (see comments-backend.gs
    in the repo for the script + setup steps). With it set, letters are
@@ -5570,25 +5613,47 @@ function tokenMatches(set, t) {
   return false;
 }
 
+/* The group a poem belongs to: "أغنية" if tagged as a song,
+   otherwise its first tag */
+function poemGroup(p) {
+  const tags = p.ar.tags || [];
+  return tags.indexOf("أغنية") !== -1 ? "أغنية" : (tags[0] || "");
+}
+
 function buildList(filter) {
   const tokens = (filter || "").trim()
     ? normalizeArabic(filter.trim()).split(/[^a-z0-9ء-ي]+/).filter(Boolean)
     : [];
   listEl.innerHTML = "";
   let shown = 0;
+  const grouped = new Map();
   for (const p of POEMS) {
     if (tokens.length && !tokens.every((t) => tokenMatches(poemWords(p), t))) continue;
-    shown++;
-    const view = poemView(p);
-    const li  = document.createElement("li");
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.id = p.id;
-    btn.innerHTML = '<span dir="' + view.dir + '">' + esc(view.v.title) + "</span>" +
-      (hasSong(p) ? '<span class="song-badge">' + T("songBadge") + "</span>" : "");
-    btn.addEventListener("click", () => selectPoem(p.id, true, true));
-    li.appendChild(btn);
-    listEl.appendChild(li);
+    const g = poemGroup(p);
+    if (!grouped.has(g)) grouped.set(g, []);
+    grouped.get(g).push(p);
+  }
+  const order = GROUP_ORDER.map((g) => g.tag).filter((t) => grouped.has(t));
+  for (const t of grouped.keys()) if (order.indexOf(t) === -1) order.push(t);
+  for (const tag of order) {
+    const def  = GROUP_ORDER.find((g) => g.tag === tag);
+    const head = document.createElement("li");
+    head.className = "group-head";
+    head.textContent = (LANG === "en" && def && def.en) ? def.en : tag;
+    listEl.appendChild(head);
+    for (const p of grouped.get(tag)) {
+      shown++;
+      const view = poemView(p);
+      const li  = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.id = p.id;
+      btn.innerHTML = '<span dir="' + view.dir + '">' + esc(view.v.title) + "</span>" +
+        (hasSong(p) ? '<span class="song-badge">' + T("songBadge") + "</span>" : "");
+      btn.addEventListener("click", () => selectPoem(p.id, true, true));
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    }
   }
   emptyEl.hidden = shown > 0;
   markActive();
@@ -5815,8 +5880,11 @@ function renderHero() {
   const rotating = FEATURED_ID === "rotate";
   let p;
   if (rotating) {
+    /* pick by sorted id, not array position, so reordering or
+       regrouping POEMS never changes which poem a given day gets */
     const day = Math.floor(Date.now() / 86400000);
-    p = POEMS[day % POEMS.length];
+    const ids = POEMS.map((x) => x.id).sort();
+    p = POEMS.find((x) => x.id === ids[day % ids.length]);
   } else {
     p = POEMS.find((x) => x.id === FEATURED_ID);
   }
