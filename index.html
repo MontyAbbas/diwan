@@ -5968,6 +5968,11 @@ function poemGroup(p) {
   return tags.indexOf("أغنية") !== -1 ? "أغنية" : (tags[0] || "");
 }
 
+function songTag(p) {
+  const tags = (p[LANG] || p.ar).tags || [];
+  return tags.find((tag) => tag !== "أغنية") || "";
+}
+
 function buildList(filter) {
   const tokens = (filter || "").trim()
     ? normalizeArabic(filter.trim()).split(/[^a-z0-9ء-ي]+/).filter(Boolean)
@@ -5989,7 +5994,12 @@ function buildList(filter) {
     head.className = "group-head";
     head.textContent = (LANG === "en" && def && def.en) ? def.en : tag;
     listEl.appendChild(head);
-    for (const p of grouped.get(tag)) {
+    const entries = grouped.get(tag).slice().sort((a, b) => {
+      if (tag !== "أغنية") return 0;
+      return songTag(a).localeCompare(songTag(b), LANG) ||
+        (poemView(a).v.title.localeCompare(poemView(b).v.title, LANG));
+    });
+    for (const p of entries) {
       shown++;
       const view = poemView(p);
       const li  = document.createElement("li");
@@ -5997,7 +6007,8 @@ function buildList(filter) {
       btn.type = "button";
       btn.dataset.id = p.id;
       btn.innerHTML = '<span dir="' + view.dir + '">' + esc(view.v.title) + "</span>" +
-        (hasSong(p) ? '<span class="song-badge">' + T("songBadge") + "</span>" : "");
+        (hasSong(p) ? '<span class="song-badge">' + T("songBadge") +
+          (songTag(p) ? " · " + esc(songTag(p)) : "") + "</span>" : "");
       btn.addEventListener("click", () => selectPoem(p.id, true, true));
       li.appendChild(btn);
       listEl.appendChild(li);
