@@ -6040,13 +6040,25 @@ function renderPoem(p) {
     }).join("");
     return '<div class="stanza">' + lines + "</div>";
   }).join("");
-  const stanzaHtml = renderStanzas(v);
-  const translatedHtml = p.ar && p.en
-    ? '<div class="poem-translation" lang="' + (LANG === "ar" ? "en" : "ar") + '" dir="' +
-      (LANG === "ar" ? "ltr" : "rtl") + '"><p class="translation-label">' +
-      (LANG === "ar" ? "English" : "العربية") + '</p>' +
-      renderStanzas(LANG === "ar" ? p.en : p.ar) + "</div>"
-    : "";
+  const bilingual = p.ar && p.en;
+  const stanzaHtml = bilingual
+    ? p.en.stanzas.map((stanza, index) =>
+        '<div class="story-pair">' +
+        '<div class="stanza" lang="en" dir="ltr">' +
+        stanza.map((line) => {
+          delay += 0.12;
+          return '<span class="line" style="--d:' + delay.toFixed(2) + 's">' + esc(line) + "</span>";
+        }).join("") +
+        '</div>' +
+        (p.ar.stanzas[index] ? '<div class="stanza" lang="ar" dir="rtl">' +
+          p.ar.stanzas[index].map((line) => {
+            delay += 0.12;
+            return '<span class="line" style="--d:' + delay.toFixed(2) + 's">' + esc(line) + "</span>";
+          }).join("") +
+          '</div>' : '') +
+        '</div>'
+      ).join("")
+    : renderStanzas(v);
 
   const tagsHtml = v.tags.map((t) => '<span class="tag">' + esc(t) + "</span>").join("");
 
@@ -6107,7 +6119,7 @@ function renderPoem(p) {
     '<p class="poem-eyebrow">' + tagsHtml + "</p>" +
     '<h2 class="poem-title" dir="' + view.dir + '">' + esc(v.title) + "</h2>" +
     (v.dedication ? '<p class="dedication" dir="' + view.dir + '">' + esc(v.dedication) + "</p>" : "") +
-    '<div class="poem-body" dir="' + view.dir + '">' + stanzaHtml + translatedHtml + "</div>" +
+    '<div class="poem-body" dir="' + view.dir + '">' + stanzaHtml + "</div>" +
     songHtml + backHtml + lettersHtml;
 
   readingEl.querySelector(".back-to-list").addEventListener("click", () => {
