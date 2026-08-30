@@ -927,6 +927,8 @@
      comments: [{name, date, text}, ...] (optional — approved
        reader letters; new letters reach you BY EMAIL first, and
        nothing appears on the site until you add it here),
+     keywords: ["..."] (optional — hidden search words that find
+       the poem but never appear on the page),
      ar: { title, tags, dedication (optional),
            stanzas: [[lines...], ...] }   — the Arabic ORIGINAL
      en: { same shape }                   — the English TRANSLATION,
@@ -937,6 +939,42 @@
    with your own work.
    ============================================================== */
 const POEMS = [
+  {
+    id: "ya-lamhat-amal",
+    youtube: "",
+    keywords: ["شكشوكى"],
+    ar: {
+      title: "يَا لَمْحَة أَمَلْ جُوَّايْ",
+      tags: ["حب"],
+      dedication: "",
+      stanzas: [
+        [
+          "يَا لَمْحَة أَمَلْ جُوَّايْ",
+          "وَيَا فَرْحَة مَعَانِي هَوَايْ",
+          "وَيَا بَسْمَة لِقَائِي مَعَاكْ",
+          "وَقَمْرَة تَضَوِّي لِي سَمَايْ"
+        ],
+        [
+          "خَلِّيكْ غَيْمَة يَا دُنْيَايْ",
+          "تَمْطِرِي فِي الصَّحَارِي حَنَانْ",
+          "وَحُبّ جَارِفْ كَأَنُّو سُيُولْ",
+          "يِغَازِلْ فِي الْبِيَكُونْ وَالْكَانْ"
+        ],
+        [
+          "يَا لَمْحَة أَمَلْ جُوَّايْ",
+          "وَيَا مَعْنَى الْحَيَاة الْقُدَّامْ",
+          "وَكَيْفْ لَوْ غِبْتِي وَإِنْتِي مَعَايْ",
+          "بَتَبْقَى الدُّنْيَا فِيهَا كَلَامْ"
+        ],
+        [
+          "وَأَنَا مْسَافِرْ أَفَكِّرْ فِيكْ",
+          "وَكَيْفْ خُطُوَاتِي تَأْبَى تَسِيرْ",
+          "لَأَنُّو حَيَاتِي تَرْجَعْ لِيكْ",
+          "وَقَلْبِي حَنِينْ مَعَاكِي أَسِيرْ"
+        ]
+      ]
+    }
+  },
   {
     id: "fa-ya-minni",
     youtube: "",
@@ -6091,11 +6129,11 @@ function wordVariants(w) {
 }
 
 /* Whole-word index per poem (title + dedication + tags + every line,
-   both languages), built once and cached */
+   both languages, plus optional hidden keywords), built once and cached */
 const WORDSETS = {};
 function poemWords(p) {
   if (!WORDSETS[p.id]) {
-    const parts = [];
+    const parts = [(p.keywords || []).join(" ")];
     for (const v of [p.ar, p.en]) {
       if (!v) continue;
       parts.push(v.title, v.dedication || "", (v.tags || []).join(" "));
