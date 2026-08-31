@@ -940,6 +940,53 @@
    ============================================================== */
 const POEMS = [
   {
+    id: "wa-darban-kuntu-arifuhu",
+    youtube: "",
+    ar: {
+      title: "وَدَرْبًا كُنْتُ أَعْرِفُهُ",
+      tags: ["وجدان", "ذكريات"],
+      dedication: "",
+      stanzas: [
+        [
+          "وَدَرْبًا كُنْتُ أَعْرِفُهُ",
+          "وَفِيهِ خُطَايَ أَذْكُرُهَا",
+          "وَأَوْرَاقًا تُحَرِّكُهَا",
+          "رِيَاحٌ مِنْهُ أَبْرَدُهَا"
+        ],
+        [
+          "وَذِكْرَى دَاعَبَتْ فِكْرِي",
+          "مِنَ الْأَيَّامِ أَطْلُبُهَا",
+          "خَرِيفًا كُنْتُ أُنْكِرُهُ",
+          "وَبَرْدًا رَدَّنِي عَنْهَا"
+        ],
+        [
+          "فَأَطْلُبُ بَعْضَ أَشْتَاتِي",
+          "غَرِيرًا قَارِئًا لَبِقًا",
+          "حَثِيثًا فِي مَقَاصِدِهِ",
+          "نَبِيلًا قَاصِدًا سَبِقًا"
+        ],
+        [
+          "وَآخَرَ فَارِسًا رَجُلًا",
+          "غَرِيبًا عَنْ قَرَائِنِهِ",
+          "وَحِيدًا لَا يُشَقُّ لَهُ",
+          "غُبَارٌ فِي مَدَائِنِهِ"
+        ],
+        [
+          "وَذَاكَ الشَّاعِرُ الْحَسَّاسُ",
+          "لَا يَنْفَكُّ إِطْرَابًا",
+          "وَيُشْرِقُ قَلْبُهُ حُبًّا",
+          "فَلَا يَحْتَاجُ أَسْبَابًا"
+        ],
+        [
+          "وَبَعْضُ النُّورِ فِي قَلْبِي",
+          "بِرُوحِ الْكَوْنِ يَغْمُرُنِي",
+          "فَلَا أَرْتَدُّ عَنْ دَرْبِي",
+          "وَدَرْبِي دَلَّنِي عَنِّي"
+        ]
+      ]
+    }
+  },
+  {
     id: "ya-lamhat-amal",
     youtube: "",
     keywords: ["شكشوكى"],
@@ -1561,6 +1608,23 @@ const POEMS = [
   {
     id: "qul-liljamila",
     youtube: "7kWFOColhb8",
+    comments: [
+      {
+        name: "زائر",
+        date: "أغسطس 2026",
+        text: "قصاىدك واغانيك جميلة يا دكتوراول مرة اسمع لك او اقراء شعرك ليه موهبة جميلة زيك تكون مختفية الى للبعض طبعا .اشكر المين رود على تقديمه لك"
+      },
+      {
+        name: "Amira",
+        date: "أغسطس 2026",
+        text: "رائعة"
+      },
+      {
+        name: "Samra Alkhidir",
+        date: "أغسطس 2026",
+        text: "هذه ليست مجرد قصيدة، بل لوحة فنية صُيغت بأحاسيس صادقة وموسيقى شعرية ساحرة، تعيش في أذهان من يقرأها"
+      }
+    ],
     ar: {
       title: "قُلْ لِلْجَمِيلَةِ",
       tags: ["أغنية", "غزل"],
@@ -6325,13 +6389,18 @@ function renderPoem(p) {
   if (COMMENTS_ENDPOINT) loadLetters(p, readingEl.querySelector(".letters-list"));
 }
 
-/* Fetch approved letters for this poem from the moderation backend */
-async function loadLetters(p, box) {
+/* Fetch approved letters for this poem from the moderation backend.
+   The Apps Script endpoint fails often (long stall, then an error
+   page), so retry a few times, and never replace letters already on
+   screen (the baked-in `comments` fallback) with an empty list. */
+async function loadLetters(p, box, attempt) {
   if (!box) return;
+  attempt = attempt || 1;
   try {
     const r = await fetch(COMMENTS_ENDPOINT + "?action=list&poem=" + encodeURIComponent(p.id));
     const data = await r.json();
     if (!data.ok || !Array.isArray(data.comments) || activeId !== p.id) return;
+    if (!data.comments.length) return;
     box.innerHTML = data.comments.map((c) => {
       const d = c.date ? new Date(c.date) : null;
       const ds = d && !isNaN(d)
@@ -6341,7 +6410,11 @@ async function loadLetters(p, box) {
         '<p class="letter-by">' + esc(String(c.name || "")) +
         (ds ? " &middot; " + esc(ds) : "") + "</p></div>";
     }).join("");
-  } catch (err) { /* backend unreachable — keep whatever is shown */ }
+  } catch (err) {
+    /* backend glitch — retry (it usually answers within a few tries),
+       unless the reader has moved on to another poem */
+    if (attempt < 3 && activeId === p.id) loadLetters(p, box, attempt + 1);
+  }
 }
 
 async function sendLetter(form, poem) {
