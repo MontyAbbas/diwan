@@ -297,20 +297,38 @@
   }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
   .hero-latest {
-    margin-top: 1.1rem;
-    font-size: 0.95rem;
-    color: var(--ink-soft);
-  }
-  .hero-latest button {
-    background: none;
-    border: none;
-    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-top: 1.5rem;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
     font: inherit;
-    font-weight: 700;
-    color: var(--accent);
+    color: inherit;
+    text-align: start;
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 0.25em;
+    transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .hero-latest:hover {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .hero-latest-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+  }
+  .hero-latest-title {
+    font-family: "Fraunces", "Amiri", Georgia, serif;
+    font-style: italic;
+    font-size: 1.3rem;
+    line-height: 1.3;
   }
   .btn-gold, .btn-ghost {
     display: inline-flex;
@@ -6225,7 +6243,7 @@ const STR = {
     latestSong: "الأغنية المختارة", latestPoem: "القصيدة المختارة",
     dailySong: "أغنية اليوم", dailyPoem: "قصيدة اليوم",
     heroRead: "اقرأ القصيدة", heroListen: "&#9834; استمع إلى الأغنية",
-    heroNewest: "الجديد في الديوان:",
+    heroNewest: "الجديد في الديوان",
     theSong: "الأغنية",
     videoSoon: "الأغنية مسجَّلة &mdash; الفيديو قريبًا.",
     watch: "شاهد على يوتيوب &#8599;",
@@ -6259,7 +6277,7 @@ const STR = {
     latestSong: "Featured Song", latestPoem: "Featured Poem",
     dailySong: "Today's Song", dailyPoem: "Today's Poem",
     heroRead: "Read the poem", heroListen: "&#9834; Hear the song",
-    heroNewest: "Newest in the diwan:",
+    heroNewest: "Newest in the diwan",
     theSong: "The Song",
     videoSoon: "Song recorded &mdash; video coming soon.<br>(Paste the YouTube video ID into the POEMS array to embed it here.)",
     watch: "Watch on YouTube &#8599;",
@@ -6703,9 +6721,10 @@ function renderHero() {
   if (newest && newest.id !== p.id) {
     const nv = poemView(newest);
     heroEl.innerHTML +=
-      '<p class="hero-latest">' + T("heroNewest") + " " +
-      '<button type="button" id="hero-newest" dir="' + nv.dir + '">' +
-      esc(nv.v.title) + "</button></p>";
+      '<button type="button" class="hero-latest" id="hero-newest">' +
+      '<span class="hero-latest-label">' + T("heroNewest") + "</span>" +
+      '<span class="hero-latest-title" dir="' + nv.dir + '">' +
+      esc(nv.v.title) + "</span></button>";
   }
   heroEl.hidden = false;
   const goTo = (scrollToSong) => {
